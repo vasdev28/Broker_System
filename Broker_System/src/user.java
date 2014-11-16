@@ -36,7 +36,7 @@ public class user {
          int n=crypt.randInt(1,1000);
          send_msg(client,"Alice"+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
          System.out.println(n);
-         String enc_msg=crypt.decrypt(secKey,ivKey,get_msg(client));
+         //String enc_msg=crypt.decrypt(secKey,ivKey,get_msg(client));
          
          send_msg(client,"No Mention!!!");
          client.close();
