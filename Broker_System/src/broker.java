@@ -42,7 +42,6 @@ public class broker extends Thread {
             String userNonce = crypt.decrypt(secKey,ivKey,msg1.substring(msg1.length()-24,msg1.length()));
             String myNonce = Integer.toString(crypt.randInt(1, 1000));
             send_msg(server,crypt.encrypt(secKey,ivKey,crypt.genKey()+userNonce+myNonce));
-            //send_msg(server,"Thank you for connecting to the server!");
             get_msg(server);
             server.close();
          } catch(SocketTimeoutException s) {
