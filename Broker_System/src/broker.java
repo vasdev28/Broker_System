@@ -41,8 +41,10 @@ public class broker extends Thread {
             String user = msg1.substring(0,msg1.length()-24);
             String userNonce = crypt.decrypt(secKey,ivKey,msg1.substring(msg1.length()-24,msg1.length()));
             String myNonce = Integer.toString(crypt.randInt(1, 1000));
-            send_msg(server,crypt.encrypt(secKey,ivKey,crypt.genKey()+userNonce+myNonce));
-            get_msg(server);
+            String sessKey = crypt.genKey();
+            send_msg(server,crypt.encrypt(secKey,ivKey,sessKey+userNonce+myNonce));
+            String msg3=crypt.decrypt(sessKey, ivKey,get_msg(server));
+            System.out.println(msg3);
             server.close();
          } catch(SocketTimeoutException s) {
             System.out.println("Socket timed out!");

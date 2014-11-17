@@ -35,7 +35,17 @@ public class user {
          int n=crypt.randInt(1,1000);
          send_msg(client,"Alice"+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
          String dec_msg1=crypt.decrypt(secKey,ivKey,get_msg(client));
-         send_msg(client,"No Mention!!!");
+         String sessKey=dec_msg1.substring(0, 16);
+         int n_len = Integer.toString(n).length();
+         String n1=dec_msg1.substring(16,16+n_len);
+         if(Integer.parseInt(n1)!=n) {
+        	 System.out.println("Aborting connection since Nonces don't match:Expected"+n1+"Received"+dec_msg1.substring(16,16+n_len));
+        	 client.close();
+         } else {
+        	 String n2=dec_msg1.substring(16+n_len, dec_msg1.length());
+        	 send_msg(client,crypt.encrypt(sessKey, ivKey, n2+"Amazon"));
+        	 System.out.println("Nonces match"+n1+"Generated"+n2);
+         }
          client.close();
       } catch(IOException e) {
          e.printStackTrace();
