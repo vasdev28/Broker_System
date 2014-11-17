@@ -6,7 +6,6 @@ public class user {
    private static String secKey="key123";
    private static crypto crypt = new crypto();
    
-   
    private static String get_msg(Socket insock) {
 		try {
 	        DataInputStream in = new DataInputStream(insock.getInputStream());
