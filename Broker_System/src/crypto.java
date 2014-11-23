@@ -46,7 +46,6 @@ public class crypto {
    
     public String genKey() {
     	String key = shapeKey(UUID.randomUUID().toString());
-    	System.out.println(key);
     	return key;
     }
     
