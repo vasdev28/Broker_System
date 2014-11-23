@@ -4,7 +4,7 @@ import java.io.*;
 public class broker extends Thread {
    private ServerSocket serverSocket;
    private static String ivKey="0";
-   private static String secKey="key123";
+   private static String secKey="a6113f9c-0643-43";
    private static crypto crypt = new crypto();
 
    public broker(int port) throws IOException {

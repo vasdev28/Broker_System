@@ -1,9 +1,13 @@
 import java.net.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.io.*;
 
 public class user {
    private static String ivKey="0";
-   private static String secKey="key123";
+   //private static String secKey="key123";
    private static crypto crypt = new crypto();
    
    private static String get_msg(Socket insock) {
@@ -27,8 +31,16 @@ public class user {
 		}
    }
    
-   public static void main(String [] args)  {
-      String serverName = args[0];
+   public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException  {
+      
+	   DatabaseConnectivity dbconn = new DatabaseConnectivity();
+	   Connection conn = dbconn.connectToDatabase();
+	   Statement stmt = conn.createStatement();
+	   ResultSet rs = stmt.executeQuery("select * from alice where broker = 'paypal'");
+	   if(rs.next()){
+		   String secKey = rs.getString("secKey");
+		   System.out.println("Sys out sec key is : " + secKey);
+	   String serverName = args[0];
       int port = Integer.parseInt(args[1]);
       try {
          Socket client = new Socket(serverName, port);
@@ -50,5 +62,10 @@ public class user {
       } catch(IOException e) {
          e.printStackTrace();
       }
+	   }
+	   else {
+		   System.out.println("\n The broker secret key was not found \n");
+		   
+	   }
    }
 }
