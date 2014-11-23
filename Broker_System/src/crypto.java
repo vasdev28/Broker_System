@@ -1,7 +1,20 @@
 import javax.crypto.Cipher;
+
+import java.math.BigInteger;
+import java.security.*;
+
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Random;
 import java.util.UUID;
 
@@ -55,4 +68,27 @@ public class crypto {
 	    int randomNum = rand.nextInt((max - min) + 1) + min;
 	    return randomNum;
    }
+    
+    public static String[] privatePublicKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
+      	 KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+      	 keyGen.initialize(1024);
+      	 KeyPair keypair = keyGen.genKeyPair();
+      	 PrivateKey privateKey = keypair.getPrivate();
+      	 PublicKey publicKey = keypair.getPublic();
+      	 String privatekey = privateKey.toString();
+      	 String publickey = publicKey.toString();
+      	KeyFactory fact = KeyFactory.getInstance("RSA");
+      	RSAPublicKeySpec publ = fact.getKeySpec(keypair.getPublic(),
+      	  RSAPublicKeySpec.class);
+      	RSAPrivateKeySpec priv = fact.getKeySpec(keypair.getPrivate(),
+      	  RSAPrivateKeySpec.class);
+      	BigInteger privateExponent = priv.getPrivateExponent();
+      	BigInteger privateModulus = priv.getModulus();
+      	BigInteger publicExponent = publ.getPublicExponent();
+      	BigInteger publicModulus = publ.getModulus();
+      	
+      	System.out.println("The Private exponent is \n" + privateExponent + "\n The private modulus is \n" + privateModulus + "\n\n The Pubic Exponent is \n " + publicExponent + "\n The public Modulus is \n" + publicModulus);
+      return new String[] {privatekey, publickey};
+      }
+    
 }
