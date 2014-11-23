@@ -1,10 +1,14 @@
 import java.net.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.io.*;
 
 public class broker extends Thread {
 	private ServerSocket serverSocket;
 	private static String ivKey="0";
-	private static String secKey="a6113f9c-0643-43";
+	//private static String secKey="a6113f9c-0643-43";
 	private static crypto crypt = new crypto();
 
 	public broker(int port) throws IOException {
@@ -32,16 +36,25 @@ public class broker extends Thread {
 		}
 	}
 
-	private static String genSessKeyUser(Socket server) throws IOException {
+	private static String genSessKeyUser(Socket server) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		String msg1=get_msg(server);
 		String user = msg1.substring(0,msg1.length()-24);
+		DatabaseConnectivity dbconn = new DatabaseConnectivity();
+		Connection conn = dbconn.connectToDatabase();
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("select * from user_details_paypal where user_name = '" + user.toLowerCase() + "'");
+		String sessKey = crypt.genKey();
+		if(rs.next()){
+		String secKey = rs.getString("user_secret_key");
 		String userNonce = crypt.decrypt(secKey,ivKey,msg1.substring(msg1.length()-24,msg1.length()));
 		String myNonce = Integer.toString(crypt.randInt(1, 1000));
-		String sessKey = crypt.genKey();
 		send_msg(server,crypt.encrypt(secKey,ivKey,sessKey+userNonce+myNonce));
 		String msg3=crypt.decrypt(sessKey, ivKey,get_msg(server));
 		if(!msg3.startsWith(myNonce)) {
 			System.out.println("Nonces dont match for "+user+".Exp:"+myNonce+"\tRxd:"+msg3.substring(0,myNonce.length()));
+		}
+		} else{
+			System.out.println("\n Could not find user sec key \n");
 		}
 		return (sessKey);
 	}
@@ -59,6 +72,18 @@ public class broker extends Thread {
 			} catch(IOException e) {
 				System.out.println("Unexpected errror");
 				break;
+			} catch (InstantiationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
