@@ -11,6 +11,7 @@ public class DatabaseConnectivity {
 	String driver = "com.mysql.jdbc.Driver"; 
 	String userName = "root";
 	String password = "root";
+	//String password = "mysql";
 		Class.forName(driver).newInstance(); 
 		Connection connection = DriverManager.getConnection(url+dbName,userName,password); 
 		

@@ -60,6 +60,7 @@ public class user {
          }
          client.close();
       } catch(IOException e) {
+    	 System.out.println("Connection Timed out!!!");
          e.printStackTrace();
       }
 	   }

@@ -33,18 +33,23 @@ public class broker extends Thread {
 		}
    }
    
+   private static String genSessKeyUser(Socket server) {
+           String msg1=get_msg(server);
+           String user = msg1.substring(0,msg1.length()-24);
+           String userNonce = crypt.decrypt(secKey,ivKey,msg1.substring(msg1.length()-24,msg1.length()));
+           String myNonce = Integer.toString(crypt.randInt(1, 1000));
+           String sessKey = crypt.genKey();
+           send_msg(server,crypt.encrypt(secKey,ivKey,sessKey+userNonce+myNonce));
+           String msg3=crypt.decrypt(sessKey, ivKey,get_msg(server));
+           System.out.println(msg3);
+           return (sessKey);
+   }
+   
    public void run() {
       while(true) {
          try {
             Socket server = serverSocket.accept();
-            String msg1=get_msg(server);
-            String user = msg1.substring(0,msg1.length()-24);
-            String userNonce = crypt.decrypt(secKey,ivKey,msg1.substring(msg1.length()-24,msg1.length()));
-            String myNonce = Integer.toString(crypt.randInt(1, 1000));
-            String sessKey = crypt.genKey();
-            send_msg(server,crypt.encrypt(secKey,ivKey,sessKey+userNonce+myNonce));
-            String msg3=crypt.decrypt(sessKey, ivKey,get_msg(server));
-            System.out.println(msg3);
+            String sesskey = genSessKeyUser(server);
             server.close();
          } catch(SocketTimeoutException s) {
             System.out.println("Socket timed out!");
@@ -61,10 +66,8 @@ public class broker extends Thread {
       try {
          Thread t = new broker(port);
          t.start();
-      } catch(IOException e1) {
+      } catch(Exception e1) {
          e1.printStackTrace();
-      } catch(Exception e2) {
-    	 e2.printStackTrace();
       }
    }
 }
