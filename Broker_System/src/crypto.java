@@ -59,7 +59,6 @@ public class crypto {
    
     public String genKey() {
     	String key = shapeKey(UUID.randomUUID().toString());
-    	System.out.println(key);
     	return key;
     }
     
@@ -90,5 +89,4 @@ public class crypto {
       	System.out.println("The Private exponent is \n" + privateExponent + "\n The private modulus is \n" + privateModulus + "\n\n The Pubic Exponent is \n " + publicExponent + "\n The public Modulus is \n" + publicModulus);
       return new String[] {privatekey, publickey};
       }
-    
 }
