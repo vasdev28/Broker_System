@@ -57,17 +57,17 @@ public class user {
 	
 	private static String getSessKeyEcomm(Socket server) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		String sessionkeyKc = crypt.genKey();
-		String msg1 = crypt.RSAEncrypt("amazon", sessionkeyKc).toString();
+		String msg1 = new String(crypt.RSAEncrypt("amazon", sessionkeyKc));
 		send_msg(server,crypt.encrypt(sa, ivKey, msg1));
 		String sessKey = crypt.decrypt(sa, ivKey, get_msg(server));
 		if(sessKey.equals("got it paypal")){
-			System.out.println("Session Key establishment successful \n the session key is = "+sessKey);
-			sc = sessKey;
+			System.out.println("Session Key establishment successful \n the session key is = "+sessionkeyKc);
+			sc = sessionkeyKc;
 		}
 		else {
 			System.out.println("Session Key Estb Failed\n");
 		}
-		return sessKey;
+		return sessionkeyKc;
 	}
 
 	public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException  {
