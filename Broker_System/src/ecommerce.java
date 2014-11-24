@@ -71,14 +71,12 @@ public class ecommerce extends Thread {
 	
 	private static String getSessKeyUser(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		String msg1 = crypt.decrypt(sb, ivKey, get_msg(client));
-		byte[] sessKeyInput = msg1.getBytes(Charset.forName("UTF-8"));
-		String sessKey = new String(crypt.RSADecrypt("amazon", sessKeyInput));
+		String sessKey = new String(crypt.RSADecrypt("amazon", msg1));
 		String msg2 = crypt.encrypt(sessKey, ivKey, "got it paypal");
 		send_msg(client, crypt.encrypt(sb, ivKey, msg2));
 		sc = sessKey;
 		System.out.println("The Session Key with user is =" + sessKey);
 		return sessKey;
-		
 	}
 
 	public void run() {

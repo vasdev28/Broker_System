@@ -106,7 +106,7 @@ public class broker extends Thread {
 					System.out.println("\n The broker secret key was not found \n");
 				}
 				System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
-				getSessKeyClientEcomm(client,server);
+				getSessKeyClientEcomm(server,client);
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");

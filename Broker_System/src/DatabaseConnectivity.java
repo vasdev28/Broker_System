@@ -10,8 +10,8 @@ public class DatabaseConnectivity {
 	String dbName = "netsec";
 	String driver = "com.mysql.jdbc.Driver"; 
 	String userName = "root";
-	String password = "root";
-//	String password = "mysql";
+//	String password = "root";
+	String password = "mysql";
 		Class.forName(driver).newInstance(); 
 		Connection connection = DriverManager.getConnection(url+dbName,userName,password); 
 		
