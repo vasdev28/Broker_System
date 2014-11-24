@@ -119,7 +119,7 @@ public class crypto {
 		return outp1;
 	}
 
-	public static String RSADecrypt(String user, String msg) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+	public String RSADecrypt(String user, String msg) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		String out2 = null;
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
 		Connection conn = dbconn.connectToDatabase();
@@ -135,7 +135,6 @@ public class crypto {
 			cipher.init(Cipher.DECRYPT_MODE, privKey);
 			byte[] cipherData = cipher.doFinal(Base64.decodeBase64(msg));
 			out2 = new String(cipherData);
-			//System.out.println("The decrypted text is= " + out2);
 		} else {
 			System.out.println("The Private key of user could not be found \n");
 		}

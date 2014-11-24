@@ -128,7 +128,6 @@ public class broker extends Thread {
 		try {
 			Thread t = new broker(broker_port);
 			t.start();
-			
 		} catch(Exception e1) {
 			e1.printStackTrace();
 		}

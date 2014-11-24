@@ -71,7 +71,8 @@ public class ecommerce extends Thread {
 	
 	private static String getSessKeyUser(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		String msg1 = crypt.decrypt(sb, ivKey, get_msg(client));
-		String sessKey = new String(crypt.RSADecrypt("amazon", msg1));
+		System.out.println(msg1);
+		String sessKey = crypt.RSADecrypt("amazon", msg1);
 		String msg2 = crypt.encrypt(sessKey, ivKey, "got it paypal");
 		send_msg(client, crypt.encrypt(sb, ivKey, msg2));
 		sc = sessKey;
