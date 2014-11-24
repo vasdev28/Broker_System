@@ -3,6 +3,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.*;
 
@@ -19,6 +20,10 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Random;
 import java.util.UUID;
 
@@ -72,32 +77,75 @@ public class crypto {
 		return randomNum;
 	}
 
-	public static String[] privatePublicKey() throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException {
+	public static void RSAkeyGen(String user) throws NoSuchAlgorithmException, InvalidKeySpecException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 		keyGen.initialize(1024);
 		KeyPair keypair = keyGen.genKeyPair();
-		PrivateKey privateKey = keypair.getPrivate();
-		PublicKey publicKey = keypair.getPublic();
-		String privatekey = privateKey.toString();
-		String publickey = publicKey.toString();
 		KeyFactory fact = KeyFactory.getInstance("RSA");
 		RSAPublicKeySpec publ = fact.getKeySpec(keypair.getPublic(),
 				RSAPublicKeySpec.class);
 		RSAPrivateKeySpec priv = fact.getKeySpec(keypair.getPrivate(),
 				RSAPrivateKeySpec.class);
+
 		BigInteger privateExponent = priv.getPrivateExponent();
 		BigInteger privateModulus = priv.getModulus();
 		BigInteger publicExponent = publ.getPublicExponent();
 		BigInteger publicModulus = publ.getModulus();
+
+		System.out.println("priEx= " + privateExponent + "\npriMod" + privateModulus + "\n pubExp = " + publicExponent + "\n pubMod = " + publicModulus );
+		DatabaseConnectivity dbconn = new DatabaseConnectivity();
+		Connection conn = dbconn.connectToDatabase();
+		Statement stmt = conn.createStatement();
+		stmt.executeUpdate("insert into public_key values ('" + user + "','" + publicExponent.toString() + "','" + publicModulus.toString() + "')");
+		stmt.executeUpdate("insert into private_key values ('" + user + "','" + privateExponent.toString() + "','" + privateModulus.toString() + "')");		
+	}
+	
+	public static byte[] RSAEncrypt(String user, String msg) throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		byte[] outp1 = null;
+		DatabaseConnectivity dbconn = new DatabaseConnectivity();
+		Connection conn = dbconn.connectToDatabase();
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("select * from public_key where user = '" + user + "'");
+		if(rs.next()){
+		BigInteger publicModulus = new BigInteger(rs.getString("public_modulus"));
+		BigInteger publicExponent = new BigInteger(rs.getString("public_exponent"));	
 		RSAPublicKeySpec keySpec = new RSAPublicKeySpec(publicModulus, publicExponent);
 		KeyFactory fact1 = KeyFactory.getInstance("RSA");
 		PublicKey pubKey = fact1.generatePublic(keySpec);
 		Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init(Cipher.ENCRYPT_MODE, pubKey);
-		//String src = "Data to be encrypted";
-		byte[] cipherData = cipher.doFinal();
-
-		System.out.println("The Private exponent is \n" + privateExponent + "\n The private modulus is \n" + privateModulus + "\n\n The Pubic Exponent is \n " + publicExponent + "\n The public Modulus is \n" + publicModulus);
-		return new String[] {privatekey, publickey};
+		byte[] cipherData = cipher.doFinal(msg.getBytes());
+		outp1 = cipherData;
+		
+		System.out.println("\n\n The encrypted is == " + outp1);
+		}else {
+			System.out.println("The Public Key of user could not be found \n");
+		}
+		return outp1;
 	}
+	
+	public static byte[] RSADecrypt(String user, byte[] msg) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		byte[] outp2 = null;
+		DatabaseConnectivity dbconn = new DatabaseConnectivity();
+		Connection conn = dbconn.connectToDatabase();
+		Statement stmt = conn.createStatement();
+		ResultSet rs1 = stmt.executeQuery("select * from private_key where user = '" + user + "'");
+		if(rs1.next()){
+		BigInteger privateModulus = new BigInteger(rs1.getString("private_modulus"));
+		BigInteger privateExponent = new BigInteger(rs1.getString("private_exponent"));
+		RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(privateModulus, privateExponent);
+		KeyFactory fact2 = KeyFactory.getInstance("RSA");
+		PrivateKey privKey = fact2.generatePrivate(keySpec);
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.DECRYPT_MODE, privKey);
+		byte[] cipherData = cipher.doFinal(msg);
+		outp2 = cipherData;
+		String out2 = new String(cipherData);
+		System.out.println("The decrypted text is= " + out2);
+	}	
+	else {
+			System.out.println("The Private key of user could not be found \n");
+	}
+	return outp2;
+}
 }
