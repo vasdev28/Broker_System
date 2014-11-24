@@ -12,7 +12,8 @@ public class broker extends Thread {
 	private static int ecom_port;
 	private static String eComName;
 	private static crypto crypt = new crypto();
-
+	private static String sa=null,sb=null;
+	
 	public broker(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
@@ -60,6 +61,7 @@ public class broker extends Thread {
 		} else{
 			System.out.println("\n Could not find user sec key \n");
 		}
+		sa = sessKey;
 		return (sessKey);
 	}
 	
@@ -76,7 +78,15 @@ public class broker extends Thread {
 			String n2=dec_msg1.substring(16+n_len, dec_msg1.length());
 			send_msg(client,crypt.encrypt(sessKey, ivKey, n2));
 		}	   
+		sb = sessKey;
 		return sessKey;
+	}
+	
+	private static void getSessKeyClientEcomm(Socket client, Socket server){
+		String msg1 = crypt.decrypt(sa, ivKey, get_msg(client));
+		send_msg(server, crypt.encrypt(sb, ivKey, msg1));
+		String msg2 = crypt.decrypt(sb, ivKey, get_msg(server));
+		send_msg(client, crypt.encrypt(sa, ivKey, msg2));
 	}
 
 	public void run() {

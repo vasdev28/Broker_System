@@ -1,14 +1,22 @@
 import java.net.*;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.io.*;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
 public class user {
 	private static String uname, eComName;
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
+	private static String sa =null, sc=null;
 
 	private static String get_msg(Socket insock) {
 		try {
@@ -43,6 +51,22 @@ public class user {
 			String n2=dec_msg1.substring(16+n_len, dec_msg1.length());
 			send_msg(client,crypt.encrypt(sessKey, ivKey, n2+eComName));
 		}	   
+		sa = sessKey;
+		return sessKey;
+	}
+	
+	private static String getSessKeyEcomm(Socket server) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
+		String sessionkeyKc = crypt.genKey();
+		String msg1 = crypt.RSAEncrypt("amazon", sessionkeyKc).toString();
+		send_msg(server,crypt.encrypt(sa, ivKey, msg1));
+		String sessKey = crypt.decrypt(sa, ivKey, get_msg(server));
+		if(sessKey.equals("got it paypal")){
+			System.out.println("Session Key establishment successful \n the session key is = "+sessKey);
+			sc = sessKey;
+		}
+		else {
+			System.out.println("Session Key Estb Failed\n");
+		}
 		return sessKey;
 	}
 

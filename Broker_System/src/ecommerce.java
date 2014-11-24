@@ -1,15 +1,25 @@
+import java.math.BigInteger;
 import java.net.*;
+import java.nio.charset.Charset;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.io.*;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
 public class ecommerce extends Thread {
 	private ServerSocket serverSocket;
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
-
+	private static String sc=null,sb=null;
+	
 	public ecommerce(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
@@ -35,7 +45,7 @@ public class ecommerce extends Thread {
 		}
 	}
 
-	private static String genSessKeyUser(Socket server) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+	private static String genSessKeyBroker(Socket server) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		String msg1=get_msg(server);
 		String brokerName = msg1.substring(0,msg1.length()-24);
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
@@ -55,14 +65,27 @@ public class ecommerce extends Thread {
 		} else{
 			System.out.println("\n Could not find user sec key \n");
 		}
+		sb = sessKey;
 		return (sessKey);
+	}
+	
+	private static String getSessKeyUser(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
+		String msg1 = crypt.decrypt(sb, ivKey, get_msg(client));
+		byte[] sessKeyInput = msg1.getBytes(Charset.forName("UTF-8"));
+		String sessKey = new String(crypt.RSADecrypt("amazon", sessKeyInput));
+		String msg2 = crypt.encrypt(sessKey, ivKey, "got it paypal");
+		send_msg(client, crypt.encrypt(sb, ivKey, msg2));
+		sc = sessKey;
+		System.out.println("The Session Key with user is =" + sessKey);
+		return sessKey;
+		
 	}
 
 	public void run() {
 		while(true) {
 			try {
 				Socket server = serverSocket.accept();
-				String sessKey = genSessKeyUser(server);
+				String sessKey = genSessKeyBroker(server);
 				System.out.println("Session Key="+sessKey);
 				server.close();
 			} catch(SocketTimeoutException s) {
