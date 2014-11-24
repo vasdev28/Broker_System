@@ -54,7 +54,7 @@ public class ecommerce extends Thread {
 		ResultSet rs = stmt.executeQuery("select * from broker_details_amazon where broker_name = '" + brokerName.toLowerCase() + "'");
 		String sessKey = crypt.genKey();
 		if(rs.next()) {
-			String secKey = rs.getString("user_secret_key");
+			String secKey = rs.getString("shared_key");
 			String userNonce = crypt.decrypt(secKey,ivKey,msg1.substring(msg1.length()-24,msg1.length()));
 			String myNonce = Integer.toString(crypt.randInt(1, 1000));
 			send_msg(server,crypt.encrypt(secKey,ivKey,sessKey+userNonce+myNonce));
@@ -86,12 +86,15 @@ public class ecommerce extends Thread {
 			try {
 				Socket server = serverSocket.accept();
 				String sessKey = genSessKeyBroker(server);
-				System.out.println("Session Key="+sessKey);
+				getSessKeyUser(server);
+				System.out.println("Session Key for broker ="+sb);
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");
 				break;
-			} catch(IOException e) {
+			} catch(InvalidKeyException | NoSuchAlgorithmException
+					| InvalidKeySpecException | NoSuchPaddingException
+					| IllegalBlockSizeException | BadPaddingException|IOException e) {
 				System.out.println("Unexpected errror");
 				break;
 			} catch (InstantiationException|IllegalAccessException|ClassNotFoundException|SQLException e) {

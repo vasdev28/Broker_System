@@ -57,7 +57,6 @@ public class broker extends Thread {
 				System.out.println("Nonces dont match for "+user+".Exp:"+myNonce+"\tRxd:"+msg3.substring(0,myNonce.length()));
 			}
 			eComName = msg3.substring(myNonce.length(),msg3.length());
-			System.out.println("eComName="+eComName);
 		} else{
 			System.out.println("\n Could not find user sec key \n");
 		}
@@ -67,7 +66,7 @@ public class broker extends Thread {
 	
 	private static String getSessKeyEcom(Socket client,String secKey) throws IllegalArgumentException {
 		int n=crypt.randInt(1,1000);
-		send_msg(client,"Alice"+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
+		send_msg(client,"paypal"+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
 		String dec_msg1=crypt.decrypt(secKey,ivKey,get_msg(client));
 		String sessKey=dec_msg1.substring(0, 16);
 		int n_len = Integer.toString(n).length();
@@ -93,19 +92,21 @@ public class broker extends Thread {
 		while(true) {
 			try {
 				Socket server = serverSocket.accept();
+				Socket client = new Socket(ecom_ip, ecom_port);;
 				String sessKeyUser = genSessKeyUser(server);
 
 				DatabaseConnectivity dbconn = new DatabaseConnectivity();
 				Connection conn = dbconn.connectToDatabase();
 				Statement stmt = conn.createStatement();
-				ResultSet rs = stmt.executeQuery("select * from user_details_paypal  where user_name = "+ eComName);
+				ResultSet rs = stmt.executeQuery("select * from user_details_paypal where user_name = '"+ eComName+"';");
 				if(rs.next()){
-					String secKey = rs.getString("secKey");
-					Socket client = new Socket(ecom_ip, ecom_port);
-					String sessKeyEcom = getSessKeyEcom(server,secKey);
+					String secKey = rs.getString("user_secret_key");
+					String sessKeyEcom = getSessKeyEcom(client,secKey);
 				} else {
 					System.out.println("\n The broker secret key was not found \n");
 				}
+				System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
+				getSessKeyClientEcomm(client,server);
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");

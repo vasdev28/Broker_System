@@ -71,7 +71,7 @@ public class user {
 		return sessionkeyKc;
 	}
 
-	public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException  {
+	public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException  {
 		uname = args[0];
 		String broker_ip = args[1];
 		int broker_port = Integer.parseInt(args[2]);
@@ -85,7 +85,8 @@ public class user {
 			try {
 				Socket client = new Socket(broker_ip, broker_port);
 				String sessKey=getSessKeyBroker(client,secKey);
-				System.out.println("Session Key="+sessKey);
+				System.out.println("Session Key for broker ="+sa);
+				String key2=getSessKeyEcomm(client);
 				client.close();
 			} catch(IOException e1) {
 				System.out.println("Connection Timed out!!!");

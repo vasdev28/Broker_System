@@ -1,0 +1,13 @@
+Testing all in 1 machine
+--------------------------
+java user alice localhost 1067 amazon
+java broker 1067 localhost 1068
+java ecommerce 1068
+
+Testing each in a different machine
+Alice : IP1
+Broker: IP2
+ECom  :  IP3
+java user alice ip2 port2 amazon
+java broker port2 localhost port3
+java ecommerce port3

@@ -77,7 +77,7 @@ public class crypto {
 		return randomNum;
 	}
 
-	public static void RSAkeyGen(String user) throws NoSuchAlgorithmException, InvalidKeySpecException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
+	public void RSAkeyGen(String user) throws NoSuchAlgorithmException, InvalidKeySpecException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 		keyGen.initialize(1024);
 		KeyPair keypair = keyGen.genKeyPair();
@@ -100,7 +100,7 @@ public class crypto {
 		stmt.executeUpdate("insert into private_key values ('" + user + "','" + privateExponent.toString() + "','" + privateModulus.toString() + "')");		
 	}
 	
-	public static byte[] RSAEncrypt(String user, String msg) throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+	public byte[] RSAEncrypt(String user, String msg) throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		byte[] outp1 = null;
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
 		Connection conn = dbconn.connectToDatabase();
