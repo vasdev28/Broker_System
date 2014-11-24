@@ -60,7 +60,8 @@ public class user {
 		String msg1 = new String(crypt.RSAEncrypt("amazon", sessionkeyKc));
 		send_msg(server,crypt.encrypt(sa, ivKey, msg1));
 		String sessKey = crypt.decrypt(sa, ivKey, get_msg(server));
-		if(sessKey.equals("got it paypal")){
+		String sessKey1 = crypt.decrypt(sc, ivKey, sessKey);
+		if(sessKey1.equals("got it paypal")){
 			System.out.println("Session Key establishment successful \n the session key is = "+sessionkeyKc);
 			sc = sessionkeyKc;
 		}
