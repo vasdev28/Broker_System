@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.io.*;
+import java.util.ArrayList;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -43,6 +44,14 @@ public class ecommerce extends Thread {
 		}
 	}
 
+	private static void send_list(Socket outsock,ArrayList<String> msg) {
+		try {
+			ObjectOutputStream objectOutput = new ObjectOutputStream(outsock.getOutputStream());
+	        objectOutput.writeObject(msg); 			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	private static void genSessKeyBroker(Socket server) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		String msg1=get_msg(server);
 		String brokerName = msg1.substring(0,msg1.length()-24);
@@ -72,7 +81,23 @@ public class ecommerce extends Thread {
 	}
 	
 	private static void sendInventory(Socket client) {
-		get_msg(client);
+		ArrayList<String> item = new ArrayList<String>();
+		DatabaseConnectivity db1 = new DatabaseConnectivity();
+		crypto crypt1 = new crypto();
+		try {
+			Connection conn = db1.connectToDatabase();
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("select * from broker_details_amazon;");
+			while(rs.next()) {
+		        item.add(rs.getString(1));
+		        item.add(rs.getString(2));
+		        item.add(rs.getString(3));
+			}
+			conn.close();
+		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		send_list(client,crypt1.encrypt(sc,ivKey,item));
 	}
 	
 	public void run() {

@@ -91,6 +91,7 @@ public class broker extends Thread {
 	private static void passInventory(Socket client,Socket server) {
 		send_msg(server,get_msg(client));
 	}
+	
 	public void run() {
 		while(true) {
 			try {
