@@ -55,12 +55,12 @@ public class user {
 		}	   
 	}
 	
-	private static void getSessKeyEcomm(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
-		get_msg(client);
+	private static void getSessKeyEcomm(Socket server) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
+		get_msg(server);
 		sc = crypt.genKey();
-		String msg1 = new String(crypt.RSAEncrypt("amazon", sc));
-		send_msg(client,crypt.encrypt(sa, ivKey, msg1));
-		String sessKeyeCom = crypt.decrypt(sc, ivKey, crypt.decrypt(sa, ivKey, get_msg(client)));
+		String msg1 = new String(crypt.RSAEncrypt(eComName.toLowerCase(), sc));
+		send_msg(server,crypt.encrypt(sa, ivKey, msg1));
+		String sessKeyeCom = crypt.decrypt(sc, ivKey, crypt.decrypt(sa, ivKey, get_msg(server)));
 		if(!sessKeyeCom.equals("got it paypal")) {
 			System.out.println("Session Key Estb Failed\n");
 		}
