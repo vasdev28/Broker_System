@@ -16,7 +16,7 @@ public class ecommerce extends Thread {
 	private ServerSocket serverSocket;
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
-	private static String sb=null,sc=null;
+	private static String sb=null,sc=null,brokername = null;
 	
 	public ecommerce(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
@@ -63,12 +63,13 @@ public class ecommerce extends Thread {
 		} else{
 			System.out.println("\n Could not find user sec key \n");
 		}
+		brokername = brokerName;
 	}
 	
 	private static void getSessKeyUser(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		String msg1 = crypt.decrypt(sb, ivKey, get_msg(client));
 		sc = crypt.RSADecrypt("amazon", msg1);
-		send_msg(client, crypt.encrypt(sb, ivKey, crypt.encrypt(sc, ivKey, "got it paypal")));
+		send_msg(client, crypt.encrypt(sb, ivKey, crypt.encrypt(sc, ivKey, "got it "+brokername.toLowerCase())));
 	}
 	
 	private static void sendInventory(Socket client) {
