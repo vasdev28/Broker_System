@@ -39,20 +39,20 @@ public class broker extends Thread {
 		}
 	}
 
-	private static String genSessKeyUser(Socket server) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+	private static void genSessKeyUser(Socket server) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		String msg1=get_msg(server);
 		String user = msg1.substring(0,msg1.length()-24);
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
 		Connection conn = dbconn.connectToDatabase();
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select * from user_details_paypal where user_name = '" + user.toLowerCase() + "'");
-		String sessKey = crypt.genKey();
+		sa = crypt.genKey();
 		if(rs.next()){
 			String secKey = rs.getString("user_secret_key");
 			String userNonce = crypt.decrypt(secKey,ivKey,msg1.substring(msg1.length()-24,msg1.length()));
 			String myNonce = Integer.toString(crypt.randInt(1, 1000));
-			send_msg(server,crypt.encrypt(secKey,ivKey,sessKey+userNonce+myNonce));
-			String msg3=crypt.decrypt(sessKey, ivKey,get_msg(server));
+			send_msg(server,crypt.encrypt(secKey,ivKey,sa+userNonce+myNonce));
+			String msg3=crypt.decrypt(sa, ivKey,get_msg(server));
 			if(!msg3.startsWith(myNonce)) {
 				System.out.println("Nonces dont match for "+user+".Exp:"+myNonce+"\tRxd:"+msg3.substring(0,myNonce.length()));
 			}
@@ -60,28 +60,25 @@ public class broker extends Thread {
 		} else{
 			System.out.println("\n Could not find user sec key \n");
 		}
-		sa = sessKey;
-		return (sessKey);
 	}
 	
-	private static String getSessKeyEcom(Socket client,String secKey) throws IllegalArgumentException {
+	private static void getSessKeyEcom(Socket client,String secKey) throws IllegalArgumentException {
 		int n=crypt.randInt(1,1000);
 		send_msg(client,"paypal"+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
 		String dec_msg1=crypt.decrypt(secKey,ivKey,get_msg(client));
-		String sessKey=dec_msg1.substring(0, 16);
+		sb=dec_msg1.substring(0, 16);
 		int n_len = Integer.toString(n).length();
 		String n1=dec_msg1.substring(16,16+n_len);
 		if(Integer.parseInt(n1)!=n) {
-			throw new IllegalArgumentException("Aborting connection since Nonces don't match:Expected"+n1+"Received"+dec_msg1.substring(16,16+n_len));
+			throw new IllegalArgumentException("Nonces don't match:Expected"+n1+"Received"+dec_msg1.substring(16,16+n_len));
 		} else {
 			String n2=dec_msg1.substring(16+n_len, dec_msg1.length());
-			send_msg(client,crypt.encrypt(sessKey, ivKey, n2));
+			send_msg(client,crypt.encrypt(sb, ivKey, n2));
 		}	   
-		sb = sessKey;
-		return sessKey;
 	}
 	
-	private static void getSessKeyClientEcomm(Socket client, Socket server){
+	private static void getSessKeyClientEcomm(Socket client, Socket server) {
+		// This method helps User get a key from ecommerce website.
 		String msg1 = crypt.decrypt(sa, ivKey, get_msg(client));
 		send_msg(server, crypt.encrypt(sb, ivKey, msg1));
 		String msg2 = crypt.decrypt(sb, ivKey, get_msg(server));
@@ -91,17 +88,18 @@ public class broker extends Thread {
 	public void run() {
 		while(true) {
 			try {
-				Socket server = serverSocket.accept();
-				Socket client = new Socket(ecom_ip, ecom_port);;
-				String sessKeyUser = genSessKeyUser(server);
-
 				DatabaseConnectivity dbconn = new DatabaseConnectivity();
 				Connection conn = dbconn.connectToDatabase();
 				Statement stmt = conn.createStatement();
+				
+				Socket server = serverSocket.accept();
+				Socket client = new Socket(ecom_ip, ecom_port);
+				genSessKeyUser(server);
+
 				ResultSet rs = stmt.executeQuery("select * from user_details_paypal where user_name = '"+ eComName+"';");
 				if(rs.next()){
 					String secKey = rs.getString("user_secret_key");
-					String sessKeyEcom = getSessKeyEcom(client,secKey);
+					getSessKeyEcom(client,secKey);
 				} else {
 					System.out.println("\n The broker secret key was not found \n");
 				}
@@ -115,7 +113,6 @@ public class broker extends Thread {
 				System.out.println("Unexpected errror");
 				break;
 			} catch (InstantiationException|IllegalAccessException|ClassNotFoundException|SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

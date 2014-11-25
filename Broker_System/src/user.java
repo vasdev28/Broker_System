@@ -38,36 +38,29 @@ public class user {
 		}
 	}
 
-	private static String getSessKeyBroker(Socket client,String secKey) throws IllegalArgumentException {
+	private static void getSessKeyBroker(Socket client,String secKey) throws IllegalArgumentException {
 		int n=crypt.randInt(1,1000);
 		send_msg(client,uname+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
 		String dec_msg1=crypt.decrypt(secKey,ivKey,get_msg(client));
-		String sessKey=dec_msg1.substring(0, 16);
+		sa=dec_msg1.substring(0, 16);
 		int n_len = Integer.toString(n).length();
 		String n1=dec_msg1.substring(16,16+n_len);
 		if(Integer.parseInt(n1)!=n) {
 			throw new IllegalArgumentException("Aborting connection since Nonces don't match:Expected"+n1+"Received"+dec_msg1.substring(16,16+n_len));
 		} else {
 			String n2=dec_msg1.substring(16+n_len, dec_msg1.length());
-			send_msg(client,crypt.encrypt(sessKey, ivKey, n2+eComName));
+			send_msg(client,crypt.encrypt(sa, ivKey, n2+eComName));
 		}	   
-		sa = sessKey;
-		return sessKey;
 	}
 	
-	private static String getSessKeyEcomm(Socket server) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
-		String sc = crypt.genKey();
+	private static void getSessKeyEcomm(Socket server) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
+		sc = crypt.genKey();
 		String msg1 = new String(crypt.RSAEncrypt("amazon", sc));
 		send_msg(server,crypt.encrypt(sa, ivKey, msg1));
-		String sessKey = crypt.decrypt(sa, ivKey, get_msg(server));
-		String sessKey1 = crypt.decrypt(sc, ivKey, sessKey);
-		if(sessKey1.equals("got it paypal")){
-			System.out.println("Session Key establishment successful \n the session key is = "+sc);
-		}
-		else {
+		String sessKeyeCom = crypt.decrypt(sc, ivKey, crypt.decrypt(sa, ivKey, get_msg(server)));
+		if(!sessKeyeCom.equals("got it paypal")){
 			System.out.println("Session Key Estb Failed\n");
 		}
-		return sc;
 	}
 
 	public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException  {
@@ -83,9 +76,10 @@ public class user {
 			String secKey = rs.getString("secKey");
 			try {
 				Socket client = new Socket(broker_ip, broker_port);
-				String sessKey=getSessKeyBroker(client,secKey);
-				System.out.println("Session Key for broker ="+sa);
-				String key2=getSessKeyEcomm(client);
+				getSessKeyBroker(client,secKey);
+				System.out.println("Session Key for\n1.broker ="+sa);
+				getSessKeyEcomm(client);
+				System.out.println("2.Ecom ="+sc);
 				client.close();
 			} catch(IOException e1) {
 				System.out.println("Connection Timed out!!!");
