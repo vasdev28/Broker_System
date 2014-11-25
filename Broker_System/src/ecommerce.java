@@ -70,7 +70,11 @@ public class ecommerce extends Thread {
 		sc = crypt.RSADecrypt("amazon", msg1);
 		send_msg(client, crypt.encrypt(sb, ivKey, crypt.encrypt(sc, ivKey, "got it paypal")));
 	}
-
+	
+	private static void sendInventory(Socket client) {
+		get_msg(client);
+	}
+	
 	public void run() {
 		while(true) {
 			try {
@@ -78,6 +82,7 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
+				sendInventory(server);
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");

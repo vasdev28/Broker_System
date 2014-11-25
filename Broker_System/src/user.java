@@ -53,14 +53,19 @@ public class user {
 		}	   
 	}
 	
-	private static void getSessKeyEcomm(Socket server) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
+	private static void getSessKeyEcomm(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
+		get_msg(client);
 		sc = crypt.genKey();
 		String msg1 = new String(crypt.RSAEncrypt("amazon", sc));
-		send_msg(server,crypt.encrypt(sa, ivKey, msg1));
-		String sessKeyeCom = crypt.decrypt(sc, ivKey, crypt.decrypt(sa, ivKey, get_msg(server)));
-		if(!sessKeyeCom.equals("got it paypal")){
+		send_msg(client,crypt.encrypt(sa, ivKey, msg1));
+		String sessKeyeCom = crypt.decrypt(sc, ivKey, crypt.decrypt(sa, ivKey, get_msg(client)));
+		if(!sessKeyeCom.equals("got it paypal")) {
 			System.out.println("Session Key Estb Failed\n");
 		}
+	}
+	
+	private static void getInventory(Socket client) {
+		send_msg(client,crypt.encrypt(sc, ivKey, "Send List"));
 	}
 
 	public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException  {
@@ -80,6 +85,7 @@ public class user {
 				System.out.println("Session Key for\n1.broker ="+sa);
 				getSessKeyEcomm(client);
 				System.out.println("2.Ecom ="+sc);
+				getInventory(client);
 				client.close();
 			} catch(IOException e1) {
 				System.out.println("Connection Timed out!!!");

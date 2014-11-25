@@ -62,10 +62,10 @@ public class broker extends Thread {
 		}
 	}
 	
-	private static void getSessKeyEcom(Socket client,String secKey) throws IllegalArgumentException {
+	private static void getSessKeyEcom(Socket server,String secKey) throws IllegalArgumentException {
 		int n=crypt.randInt(1,1000);
-		send_msg(client,"paypal"+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
-		String dec_msg1=crypt.decrypt(secKey,ivKey,get_msg(client));
+		send_msg(server,"paypal"+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
+		String dec_msg1=crypt.decrypt(secKey,ivKey,get_msg(server));
 		sb=dec_msg1.substring(0, 16);
 		int n_len = Integer.toString(n).length();
 		String n1=dec_msg1.substring(16,16+n_len);
@@ -73,18 +73,24 @@ public class broker extends Thread {
 			throw new IllegalArgumentException("Nonces don't match:Expected"+n1+"Received"+dec_msg1.substring(16,16+n_len));
 		} else {
 			String n2=dec_msg1.substring(16+n_len, dec_msg1.length());
-			send_msg(client,crypt.encrypt(sb, ivKey, n2));
+			send_msg(server,crypt.encrypt(sb, ivKey, n2));
 		}	   
 	}
 	
 	private static void getSessKeyClientEcomm(Socket client, Socket server) {
 		// This method helps User get a key from ecommerce website.
+		// client - send msg to client socket.
+		// server - send msg to server socket.
+		send_msg(client,crypt.encrypt(sa,ivKey,"Go Ahead"));
 		String msg1 = crypt.decrypt(sa, ivKey, get_msg(client));
 		send_msg(server, crypt.encrypt(sb, ivKey, msg1));
 		String msg2 = crypt.decrypt(sb, ivKey, get_msg(server));
 		send_msg(client, crypt.encrypt(sa, ivKey, msg2));
 	}
 
+	private static void passInventory(Socket client,Socket server) {
+		send_msg(server,get_msg(client));
+	}
 	public void run() {
 		while(true) {
 			try {
@@ -105,6 +111,7 @@ public class broker extends Thread {
 				}
 				System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
 				getSessKeyClientEcomm(server,client);
+				passInventory(server,client);
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");
