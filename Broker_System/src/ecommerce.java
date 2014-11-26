@@ -13,6 +13,8 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import org.apache.commons.codec.binary.Base64;
+
 public class ecommerce extends Thread {
 	private ServerSocket serverSocket;
 	private static String ivKey="0";
@@ -52,6 +54,7 @@ public class ecommerce extends Thread {
 			e.printStackTrace();
 		}
 	}
+
 	private static void genSessKeyBroker(Socket server) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		String msg1=get_msg(server);
 		String brokerName = msg1.substring(0,msg1.length()-24);
@@ -101,6 +104,20 @@ public class ecommerce extends Thread {
 		send_list(client,crypt1.encrypt(sc,ivKey,item));
 	}
 	
+	private static void send_file(Socket outsock,String FilePath) {
+		try {
+			File myFile = new File(FilePath);
+			byte[] mybytearray = new byte[(int) myFile.length()];
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(myFile));
+			bis.read(mybytearray, 0, mybytearray.length);
+			String str = crypt.encrypt(sc, sc, Base64.encodeBase64String(mybytearray));
+			send_msg(outsock,str);
+			bis.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void run() {
 		while(true) {
 			try {
@@ -108,7 +125,9 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				sendInventory(server);
+				//sendInventory(server);
+				send_file(server,"D:\\s1.pdf");
+				System.out.println("File transfer done");
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");

@@ -88,8 +88,8 @@ public class broker extends Thread {
 		send_msg(client, crypt.encrypt(sa, ivKey, msg2));
 	}
 
-	private static void passInventory(Socket client,Socket server) {
-		send_msg(server,get_msg(client));
+	private static void passMsg(Socket from_skt,Socket to_skt) {
+		send_msg(to_skt,get_msg(from_skt));
 	}
 	
 	public void run() {
@@ -112,7 +112,8 @@ public class broker extends Thread {
 				}
 				System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
 				getSessKeyClientEcomm(server,client);
-				passInventory(server,client);
+//				passMsg(client,server);
+				passMsg(client,server);
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");

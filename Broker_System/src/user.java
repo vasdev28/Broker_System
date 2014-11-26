@@ -1,5 +1,4 @@
 import java.net.*;
-
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -12,6 +11,8 @@ import java.io.*;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
+import org.apache.commons.codec.binary.Base64;
 
 public class user {
 	private static String uname, eComName;
@@ -39,7 +40,6 @@ public class user {
 		}
 	}
 	
-
 	private static void getSessKeyBroker(Socket client,String secKey) throws IllegalArgumentException {
 		int n=crypt.randInt(1,1000);
 		send_msg(client,uname+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
@@ -70,6 +70,19 @@ public class user {
 		send_msg(client,crypt.encrypt(sc, ivKey, "Send List"));
 	}
 
+	private static void get_file(Socket outsock,String FilePath) {
+		try {
+			String str = get_msg(outsock);
+			byte[] b2 = Base64.decodeBase64(crypt.decrypt(sc,sc,str));
+		    FileOutputStream fos = new FileOutputStream(FilePath);
+		    BufferedOutputStream bos = new BufferedOutputStream(fos);
+		    bos.write(b2, 0, b2.length);
+		    bos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException  {
 		uname = args[0];
 		String broker_ip = args[1];
@@ -87,7 +100,8 @@ public class user {
 				System.out.println("Session Key for\n1.broker ="+sa);
 				getSessKeyEcomm(client);
 				System.out.println("2.Ecom ="+sc);
-				getInventory(client);
+				//getInventory(client);
+				get_file(client,"D:\\s2.pdf");
 				client.close();
 			} catch(IOException e1) {
 				System.out.println("Connection Timed out!!!");
