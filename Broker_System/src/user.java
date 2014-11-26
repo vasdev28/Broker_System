@@ -102,6 +102,7 @@ public class user {
 				System.out.println("2.Ecom ="+sc);
 				//getInventory(client);
 				get_file(client,"D:\\s2.pdf");
+				System.out.println("File Received");
 				client.close();
 			} catch(IOException e1) {
 				System.out.println("Connection Timed out!!!");

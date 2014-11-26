@@ -6,8 +6,8 @@ java ecommerce 1068
 
 Testing each in a different machine
 Alice : IP1
-Broker: IP2
-ECom  :  IP3
+Broker: IP2 Port2
+ECom  :  IP3 Port3
 java user alice ip2 port2 amazon
-java broker port2 localhost port3
+java broker port2 ip3 port3
 java ecommerce port3
