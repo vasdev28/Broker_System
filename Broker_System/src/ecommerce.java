@@ -84,24 +84,12 @@ public class ecommerce extends Thread {
 		send_msg(client, crypt.encrypt(sb, ivKey, crypt.encrypt(sc, ivKey, "got it "+brokername.toLowerCase())));
 	}
 	
-	private static void sendInventory(Socket client) {
-		ArrayList<String> item = new ArrayList<String>();
-		DatabaseConnectivity db1 = new DatabaseConnectivity();
-		crypto crypt1 = new crypto();
-		try {
-			Connection conn = db1.connectToDatabase();
-			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery("select * from broker_details_amazon;");
-			while(rs.next()) {
-		        item.add(rs.getString(1));
-		        item.add(rs.getString(2));
-		        item.add(rs.getString(3));
-			}
-			conn.close();
-		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		send_list(client,crypt1.encrypt(sc,ivKey,item));
+	private static int sendInventory(Socket client) {
+		get_msg(client);
+		send_msg(client,"List");
+		String msg3 = crypt.decrypt(sc,ivKey,get_msg(client));
+		System.out.println(msg3.substring(4,msg3.length()));
+		return 1;
 	}
 	
 	private static void send_file(Socket outsock,String FilePath) {
@@ -125,7 +113,7 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				//sendInventory(server);
+				sendInventory(server);
 				send_file(server,"D:\\s1.pdf");
 				System.out.println("File transfer done");
 				server.close();

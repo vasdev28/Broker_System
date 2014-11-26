@@ -68,6 +68,8 @@ public class user {
 	
 	private static void getInventory(Socket client) {
 		send_msg(client,crypt.encrypt(sc, ivKey, "Send List"));
+		get_msg(client);
+		send_msg(client,crypt.encrypt(sc,ivKey,"Get 1"));
 	}
 
 	private static void get_file(Socket outsock,String FilePath) {
@@ -100,7 +102,7 @@ public class user {
 				System.out.println("Session Key for\n1.broker ="+sa);
 				getSessKeyEcomm(client);
 				System.out.println("2.Ecom ="+sc);
-				//getInventory(client);
+				getInventory(client);
 				get_file(client,"D:\\s2.pdf");
 				System.out.println("File Received");
 				client.close();

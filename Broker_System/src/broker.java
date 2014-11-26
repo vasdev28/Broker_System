@@ -87,6 +87,12 @@ public class broker extends Thread {
 		String msg2 = crypt.decrypt(sb, ivKey, get_msg(server));
 		send_msg(client, crypt.encrypt(sa, ivKey, msg2));
 	}
+	
+	private static void e2eSecureCommn(Socket userSock, Socket ecomSock) {
+		passMsg(userSock,ecomSock);
+		passMsg(ecomSock,userSock);
+		passMsg(userSock,ecomSock);
+	}
 
 	private static void passMsg(Socket from_skt,Socket to_skt) {
 		send_msg(to_skt,get_msg(from_skt));
@@ -112,6 +118,7 @@ public class broker extends Thread {
 				}
 				System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
 				getSessKeyClientEcomm(server,client);
+				e2eSecureCommn(server,client);
 //				passMsg(client,server);
 				passMsg(client,server);
 				server.close();

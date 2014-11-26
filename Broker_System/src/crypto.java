@@ -61,28 +61,6 @@ public class crypto {
 		}
 		return null; 
 	}
-
-	public ArrayList<String> encrypt(String key1, String key2, ArrayList<String> value) {
-		ArrayList<String> enc_str = new ArrayList<String>();
-		try {
-			String secKey = shapeKey(key1);
-			String ivKey = shapeKey(key2);
-			IvParameterSpec iv = new IvParameterSpec(ivKey.getBytes("UTF-8"));
-			SecretKeySpec skeySpec = new SecretKeySpec(secKey.getBytes("UTF-8"),"AES");
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-			cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
-			System.out.println("I/p List="+value);
-			for(int i=0;i<value.size();i++) {
-				String tmp = value.get(i);
-				byte[] encrypted = cipher.doFinal(tmp.getBytes());
-				enc_str.add(Base64.encodeBase64String(encrypted));
-			}
-			return enc_str;
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return null; 
-	}
 	
 	public String decrypt(String key1, String key2, String encrypted) {
 		try {
@@ -94,26 +72,6 @@ public class crypto {
 			cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
 			byte[] original = cipher.doFinal(Base64.decodeBase64(encrypted));
 			return new String(original);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return null;
-	}
-
-	public ArrayList<String> decrypt(String key1, String key2, ArrayList<String> encrypted) {
-		ArrayList<String> dec_str =new ArrayList<String>();
-		try {
-			String secKey = shapeKey(key1);
-			String ivKey = shapeKey(key2);
-			IvParameterSpec iv = new IvParameterSpec(ivKey.getBytes("UTF-8"));
-			SecretKeySpec skeySpec = new SecretKeySpec(secKey.getBytes("UTF-8"),"AES");
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-			cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
-			for(int i=0;i<encrypted.size();i++) {
-				byte[] original = cipher.doFinal(Base64.decodeBase64(encrypted.get(i)));
-				dec_str.add(new String(original));
-			}
-			return dec_str;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
