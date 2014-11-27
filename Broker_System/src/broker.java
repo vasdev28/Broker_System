@@ -120,7 +120,7 @@ public class broker extends Thread {
 				getSessKeyClientEcomm(server,client);
 				e2eSecureCommn(server,client);
 //				passMsg(client,server);
-				passMsg(client,server);
+				//passMsg(client,server);
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");

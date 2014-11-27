@@ -1,4 +1,5 @@
 import java.net.*;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -6,11 +7,15 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Scanner;
 import java.io.*;
 
 import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -67,12 +72,24 @@ public class user {
 	}
 	
 	private static void getInventory(Socket client) {
-		send_msg(client,crypt.encrypt(sc, ivKey, "Send List"));
-		get_msg(client);
-		send_msg(client,crypt.encrypt(sc,ivKey,"Get 1"));
+		try {
+			send_msg(client,"Please Send the list");
+			String str = get_msg(client);
+			byte[] b2 = Base64.decodeBase64(crypt.decrypt(sc,sc,str));
+		    FileOutputStream fos = new FileOutputStream("output.txt");
+		    BufferedOutputStream bos = new BufferedOutputStream(fos);
+		    bos.write(b2, 0, b2.length);
+		    System.out.println("Enter name of product u want:");
+		    Scanner in = new Scanner(System.in);
+		    String inputFromUser = in.nextLine();
+		    send_msg(client, inputFromUser.toUpperCase());
+		    bos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
-	private static void get_file(Socket outsock,String FilePath) {
+	/*private static void get_file(Socket outsock,String FilePath) {
 		try {
 			String str = get_msg(outsock);
 			byte[] b2 = Base64.decodeBase64(crypt.decrypt(sc,sc,str));
@@ -84,7 +101,8 @@ public class user {
 			e.printStackTrace();
 		}
 	}
-
+	*/
+	
 	public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException  {
 		uname = args[0];
 		String broker_ip = args[1];
@@ -103,7 +121,7 @@ public class user {
 				getSessKeyEcomm(client);
 				System.out.println("2.Ecom ="+sc);
 				getInventory(client);
-				get_file(client,"D:\\s2.pdf");
+				//get_file(client,"dummy1.txt");
 				System.out.println("File Received");
 				client.close();
 			} catch(IOException e1) {

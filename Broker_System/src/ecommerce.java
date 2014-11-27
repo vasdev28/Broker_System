@@ -1,4 +1,5 @@
 import java.net.*;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -10,8 +11,11 @@ import java.io.*;
 import java.util.ArrayList;
 
 import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -84,15 +88,43 @@ public class ecommerce extends Thread {
 		send_msg(client, crypt.encrypt(sb, ivKey, crypt.encrypt(sc, ivKey, "got it "+brokername.toLowerCase())));
 	}
 	
-	private static int sendInventory(Socket client) {
-		get_msg(client);
-		send_msg(client,"List");
-		String msg3 = crypt.decrypt(sc,ivKey,get_msg(client));
-		System.out.println(msg3.substring(4,msg3.length()));
-		return 1;
-	}
+	private static void sendInventory(Socket client, String FilePath) {
+		String msg = get_msg(client);
+		System.out.println(msg);
+		try {
+			File myFile = new File(FilePath);
+			byte[] mybytearray = new byte[(int) myFile.length()];
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(myFile));
+			bis.read(mybytearray, 0, mybytearray.length);
+			String str = crypt.encrypt(sc, sc, Base64.encodeBase64String(mybytearray));
+			send_msg(client,str);
+			bis.close();
+			String get_text_from_client = get_msg(client);
+			System.out.println("The item you chose is = " + get_text_from_client);
+			BufferedReader reader = new BufferedReader(new FileReader(FilePath));
+			String line;
+			String output_price = "";
+			line = reader.readLine();
+			while(line!=null){
+			String fields[] = line.split("\\s+");
+			if(fields[0].equals(get_text_from_client)){
+				output_price = fields[1];
+				System.out.println("The price of item that you chose = " + output_price);
+				break;
+			}
+			line = reader.readLine();
+
+			}
+
+			// output_price contains your price. use it here.
+			
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+}
 	
-	private static void send_file(Socket outsock,String FilePath) {
+	/*private static void send_file(Socket outsock,String FilePath) {
 		try {
 			File myFile = new File(FilePath);
 			byte[] mybytearray = new byte[(int) myFile.length()];
@@ -105,6 +137,7 @@ public class ecommerce extends Thread {
 			e.printStackTrace();
 		}
 	}
+	*/
 	
 	public void run() {
 		while(true) {
@@ -113,8 +146,8 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				sendInventory(server);
-				send_file(server,"D:\\s1.pdf");
+				sendInventory(server,"input.txt");
+				//send_file(server,"dummy1.txt");
 				System.out.println("File transfer done");
 				server.close();
 			} catch(SocketTimeoutException s) {
