@@ -118,9 +118,9 @@ public class broker extends Thread {
 		String msg3_reg[] = msg3.split(",");
 		String info2ecom = msg3_reg[0];
 		String amt = msg3_reg[1].substring(6,msg3_reg[1].length());
-		String signature = msg3_reg[2];
-		System.out.println(amt);
+		String signature_user = msg3_reg[2];
 		send_msg(ecomSock,crypt.encrypt(sb,ivKey,order_no+info2ecom+"Paid $"+amt));
+		String msg5 = get_msg(ecomSock);
 	}
 
 	private static void passMsg(Socket from_skt,Socket to_skt) {
@@ -149,7 +149,7 @@ public class broker extends Thread {
 				getSessKeyClientEcomm(server,client);
 				e2eSecureCommn(server,client);
 				processPayment(server,client);
-				//	passMsg(client,server);
+				passMsg(client,server);
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");

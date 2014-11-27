@@ -93,7 +93,6 @@ public class ecommerce extends Thread {
 			if (rs.next()) {
 				price = rs.getString("item_price");
 			} else price = "65535";
-			System.out.println(price);
 			rs = stmt.executeQuery("select max(bill_no)+1 as max from bill_details_amazon");
 			if (rs.next()) {
 				try {
