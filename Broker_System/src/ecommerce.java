@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.io.*;
-import java.util.ArrayList;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -20,7 +19,7 @@ public class ecommerce extends Thread {
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
 	private static String sb=null,sc=null,brokername = null;
-	
+
 	public ecommerce(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
@@ -41,15 +40,6 @@ public class ecommerce extends Thread {
 		try {
 			DataOutputStream out = new DataOutputStream(outsock.getOutputStream());
 			out.writeUTF(msg);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private static void send_list(Socket outsock,ArrayList<String> msg) {
-		try {
-			ObjectOutputStream objectOutput = new ObjectOutputStream(outsock.getOutputStream());
-	        objectOutput.writeObject(msg); 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -77,21 +67,53 @@ public class ecommerce extends Thread {
 		}
 		brokername = brokerName;
 	}
-	
+
 	private static void getSessKeyUser(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		String msg1 = crypt.decrypt(sb, ivKey, get_msg(client));
 		sc = crypt.RSADecrypt("amazon", msg1);
 		send_msg(client, crypt.encrypt(sb, ivKey, crypt.encrypt(sc, ivKey, "got it "+brokername.toLowerCase())));
 	}
-	
+
 	private static int sendInventory(Socket client) {
 		get_msg(client);
 		send_msg(client,"List");
 		String msg3 = crypt.decrypt(sc,ivKey,get_msg(client));
-		System.out.println(msg3.substring(4,msg3.length()));
+		//System.out.println(msg3.substring(4,msg3.length()));
 		return 1;
 	}
-	
+
+	private static void initiatePayment(Socket client,int itemNo) {
+		String price;
+		int bill_no=1;
+		DatabaseConnectivity dbconn = new DatabaseConnectivity();
+		try {
+			Connection conn = dbconn.connectToDatabase();
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("select * from vendor_inventory_amazon where item_no = " + itemNo);
+			if (rs.next()) {
+				price = rs.getString("item_price");
+			} else price = "65535";
+			System.out.println(price);
+			rs = stmt.executeQuery("select max(bill_no)+1 as max from bill_details_amazon");
+			if (rs.next()) {
+				try {
+					bill_no = Integer.parseInt(rs.getString("max"));
+				} catch (NumberFormatException e) {
+					bill_no = 1;
+				}
+			}
+			send_msg(client,crypt.encrypt(sb, ivKey,"Bill," + crypt.encrypt(sc,ivKey,bill_no+",Give $"+price)));
+			String msg4 = crypt.decrypt(sb,ivKey,get_msg(client));
+			String msg4_reg[] = msg4.split("Paid .");
+			String rxd_bill_no = crypt.decrypt(sc,ivKey,msg4_reg[0].substring(msg4_reg[0].length()-24,msg4_reg[0].length()));
+			String order_num = msg4_reg[0].substring(0,msg4_reg[0].length()-24);
+			String rxd_amt = msg4_reg[1];
+			send_msg(client,crypt.encrypt(sb,ivKey,order_num+"Signature"));
+		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private static void send_file(Socket outsock,String FilePath) {
 		try {
 			File myFile = new File(FilePath);
@@ -105,7 +127,7 @@ public class ecommerce extends Thread {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void run() {
 		while(true) {
 			try {
@@ -113,7 +135,8 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				sendInventory(server);
+				int itemRequested = sendInventory(server);
+				initiatePayment(server,itemRequested);
 				send_file(server,"D:\\s1.pdf");
 				System.out.println("File transfer done");
 				server.close();

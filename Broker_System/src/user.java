@@ -72,6 +72,19 @@ public class user {
 		send_msg(client,crypt.encrypt(sc,ivKey,"Get 1"));
 	}
 
+	private static void payBill(Socket client) {
+		String msg2 = crypt.decrypt(sa, ivKey, get_msg(client));
+		System.out.println(msg2);
+		int order_num = Integer.parseInt(msg2.substring(0,msg2.length()-24));
+		System.out.println(order_num);
+		String msg2_sub = crypt.decrypt(sc,ivKey,msg2.substring(msg2.length()-24,msg2.length()));
+		System.out.println(msg2_sub);
+		String msg2_reg[] = msg2_sub.split(",Give .");
+		String bill_no = msg2_reg[0];
+		String bill_amt = msg2_reg[1];
+		send_msg(client,crypt.encrypt(sa,ivKey,crypt.encrypt(sc,ivKey,bill_no)+",Give $"+bill_amt+",Signature"));
+	}
+	
 	private static void get_file(Socket outsock,String FilePath) {
 		try {
 			String str = get_msg(outsock);
@@ -103,7 +116,8 @@ public class user {
 				getSessKeyEcomm(client);
 				System.out.println("2.Ecom ="+sc);
 				getInventory(client);
-				get_file(client,"D:\\s2.pdf");
+				payBill(client);
+			//	get_file(client,"D:\\s2.pdf");
 				System.out.println("File Received");
 				client.close();
 			} catch(IOException e1) {

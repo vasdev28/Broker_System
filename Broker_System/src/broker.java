@@ -13,7 +13,7 @@ public class broker extends Thread {
 	private static String eComName;
 	private static crypto crypt = new crypto();
 	private static String sa=null,sb=null;
-	
+
 	public broker(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
@@ -61,7 +61,7 @@ public class broker extends Thread {
 			System.out.println("\n Could not find user sec key \n");
 		}
 	}
-	
+
 	private static void getSessKeyEcom(Socket server,String secKey) throws IllegalArgumentException {
 		int n=crypt.randInt(1,1000);
 		send_msg(server,"paypal"+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
@@ -76,7 +76,7 @@ public class broker extends Thread {
 			send_msg(server,crypt.encrypt(sb, ivKey, n2));
 		}	   
 	}
-	
+
 	private static void getSessKeyClientEcomm(Socket client, Socket server) {
 		// This method helps User get a key from ecommerce website.
 		// client - send msg to client socket.
@@ -87,24 +87,53 @@ public class broker extends Thread {
 		String msg2 = crypt.decrypt(sb, ivKey, get_msg(server));
 		send_msg(client, crypt.encrypt(sa, ivKey, msg2));
 	}
-	
+
 	private static void e2eSecureCommn(Socket userSock, Socket ecomSock) {
 		passMsg(userSock,ecomSock);
 		passMsg(ecomSock,userSock);
 		passMsg(userSock,ecomSock);
 	}
 
+	private static void processPayment(Socket userSock, Socket ecomSock) {
+		int order_no=1;
+		try {
+			DatabaseConnectivity dbconn = new DatabaseConnectivity();
+			Connection conn = dbconn.connectToDatabase();
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("select max(bill_no)+1 as max from bill_details_amazon");
+			if (rs.next()) {
+				try {
+					order_no = Integer.parseInt(rs.getString("max"));
+				} catch (NumberFormatException e) {
+					order_no = 1;
+				}
+			}
+		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		String msg1 = crypt.decrypt(sb, ivKey, get_msg(ecomSock));
+		String msg2_sub = msg1.substring(5,msg1.length());
+		send_msg(userSock,crypt.encrypt(sa, ivKey, order_no+msg2_sub));
+		String msg3 = crypt.decrypt(sa, ivKey, get_msg(userSock));
+		String msg3_reg[] = msg3.split(",");
+		String info2ecom = msg3_reg[0];
+		String amt = msg3_reg[1].substring(6,msg3_reg[1].length());
+		String signature = msg3_reg[2];
+		System.out.println(amt);
+		send_msg(ecomSock,crypt.encrypt(sb,ivKey,order_no+info2ecom+"Paid $"+amt));
+	}
+
 	private static void passMsg(Socket from_skt,Socket to_skt) {
 		send_msg(to_skt,get_msg(from_skt));
 	}
-	
+
 	public void run() {
 		while(true) {
 			try {
 				DatabaseConnectivity dbconn = new DatabaseConnectivity();
 				Connection conn = dbconn.connectToDatabase();
 				Statement stmt = conn.createStatement();
-				
+
 				Socket server = serverSocket.accept();
 				Socket client = new Socket(ecom_ip, ecom_port);
 				genSessKeyUser(server);
@@ -119,8 +148,8 @@ public class broker extends Thread {
 				System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
 				getSessKeyClientEcomm(server,client);
 				e2eSecureCommn(server,client);
-//				passMsg(client,server);
-				passMsg(client,server);
+				processPayment(server,client);
+				//	passMsg(client,server);
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");
