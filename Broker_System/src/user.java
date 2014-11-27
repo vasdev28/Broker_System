@@ -6,11 +6,13 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Scanner;
 import java.io.*;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -67,9 +69,21 @@ public class user {
 	}
 	
 	private static void getInventory(Socket client) {
-		send_msg(client,crypt.encrypt(sc, ivKey, "Send List"));
-		get_msg(client);
-		send_msg(client,crypt.encrypt(sc,ivKey,"Get 1"));
+		try {
+			send_msg(client,"Please Send the list");
+			String str = get_msg(client);
+			byte[] b2 = Base64.decodeBase64(crypt.decrypt(sc,sc,str));
+		    FileOutputStream fos = new FileOutputStream("output.txt");
+		    BufferedOutputStream bos = new BufferedOutputStream(fos);
+		    bos.write(b2, 0, b2.length);
+		    System.out.println("Enter name of product u want:");
+		    Scanner in = new Scanner(System.in);
+		    String inputFromUser = in.nextLine();
+		    send_msg(client, inputFromUser.toUpperCase());
+		    bos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static void payBill(Socket client) {
@@ -79,6 +93,7 @@ public class user {
 		String msg2_reg[] = msg2_sub.split(",Give .");
 		String bill_no = msg2_reg[0];
 		String bill_amt = msg2_reg[1];
+		System.out.println("Rxd Bill_no:"+ bill_no +" for $"+bill_amt);
 		send_msg(client,crypt.encrypt(sa,ivKey,crypt.encrypt(sc,ivKey,bill_no)+",Give $"+bill_amt+",Signature"));
 	}
 	
@@ -94,7 +109,7 @@ public class user {
 			e.printStackTrace();
 		}
 	}
-
+	
 	public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException  {
 		uname = args[0];
 		String broker_ip = args[1];

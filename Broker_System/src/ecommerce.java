@@ -74,12 +74,34 @@ public class ecommerce extends Thread {
 		send_msg(client, crypt.encrypt(sb, ivKey, crypt.encrypt(sc, ivKey, "got it "+brokername.toLowerCase())));
 	}
 
-	private static int sendInventory(Socket client) {
-		get_msg(client);
-		send_msg(client,"List");
-		String msg3 = crypt.decrypt(sc,ivKey,get_msg(client));
-		//System.out.println(msg3.substring(4,msg3.length()));
-		return 1;
+	private static int sendInventory(Socket client, String FilePath) {
+		int output_index=0;
+		String msg = get_msg(client);
+		System.out.println(msg);
+		try {
+			File myFile = new File(FilePath);
+			byte[] mybytearray = new byte[(int) myFile.length()];
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(myFile));
+			bis.read(mybytearray, 0, mybytearray.length);
+			String str = crypt.encrypt(sc, sc, Base64.encodeBase64String(mybytearray));
+			bis.close();
+			send_msg(client,str);
+			String get_text_from_client = get_msg(client);
+			BufferedReader reader = new BufferedReader(new FileReader(FilePath));
+			String line = reader.readLine();
+			while(line!=null){
+				String fields[] = line.split("\\s+");
+				if(fields[4].equals(get_text_from_client)){
+					output_index = Integer.parseInt(fields[0]);
+					break;
+				}
+				line = reader.readLine();
+			}
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return output_index;
 	}
 
 	private static void initiatePayment(Socket client,int itemNo) {
@@ -134,7 +156,8 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				int itemRequested = sendInventory(server);
+				int itemRequested = sendInventory(server,"D:\\input.txt");
+				System.out.println(itemRequested);
 				initiatePayment(server,itemRequested);
 				send_file(server,"D:\\s1.pdf");
 				System.out.println("File transfer done");
