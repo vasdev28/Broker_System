@@ -79,7 +79,7 @@ public class user {
 		    System.out.println("Enter name of product u want:");
 		    Scanner in = new Scanner(System.in);
 		    String inputFromUser = in.nextLine();
-		    send_msg(client, inputFromUser.toUpperCase());
+		    send_msg(client, crypt.encrypt(sc, sc, inputFromUser.toUpperCase()));
 		    bos.close();
 		} catch (IOException e) {
 			e.printStackTrace();

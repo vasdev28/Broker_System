@@ -86,7 +86,7 @@ public class ecommerce extends Thread {
 			String str = crypt.encrypt(sc, sc, Base64.encodeBase64String(mybytearray));
 			bis.close();
 			send_msg(client,str);
-			String get_text_from_client = get_msg(client);
+			String get_text_from_client = crypt.decrypt(sc,sc,get_msg(client));
 			BufferedReader reader = new BufferedReader(new FileReader(FilePath));
 			String line = reader.readLine();
 			while(line!=null){
