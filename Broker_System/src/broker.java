@@ -162,7 +162,7 @@ public class broker extends Thread {
 			} else {
 				System.out.println("E-Commerce signature mismatch...aborting");
 			}
-			String queryupdateordersummary2 = "update order_summary_paypal SET status_of_pay = 'Paid', date_paid = '" + dateRxd + "', vendor_signature_ack = '" + signature_vendor + "' where order_num = " + order_no; 
+			String queryupdateordersummary2 = "update order_summary_paypal SET status_of_pay = 'Paid', date_paid = '" + dateRxd + "', vendor_signature_ack = '" + ecomsignature + "' where order_num = " + order_no; 
 			stmt.executeUpdate(queryupdateordersummary2);
 
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
