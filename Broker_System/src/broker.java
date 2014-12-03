@@ -116,8 +116,11 @@ public class broker extends Thread {
 		String msg1 = crypt.decrypt(sb, ivKey, get_msg(ecomSock));
 		String msg2_sub = msg1.substring(5,msg1.length());
 		send_msg(userSock,crypt.encrypt(sa, ivKey, order_no+msg2_sub));
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		String dateRxd = dateFormat.format(date);
 		
-		String queryinsertordersummary = "insert into order_summary_paypal values (" + order_no + ",'" + user + "','pending','','','" + eComName + "')";
+		String queryinsertordersummary = "insert into order_summary_paypal values (" + order_no + ",'" + user + "','pending','"+dateRxd+"','','','" + eComName + "')";
 		stmt.executeUpdate(queryinsertordersummary);
 		
 		String msg3 = crypt.decrypt(sa, ivKey, get_msg(userSock));
@@ -126,11 +129,8 @@ public class broker extends Thread {
 		String amt = msg3_reg[1].substring(6,msg3_reg[1].length());
 		String signature_user = msg3_reg[2];
 		int amount = Integer.parseInt(amt);
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date();
-		String dateRxd = dateFormat.format(date);
 		
-		String queryupdateordersummary1 = "update order_summary_paypal SET status_of_pay = 'Vendor Ack Pending', date_paid = '" + dateRxd + "', user_signature = '" + signature_user + "'"; 
+		String queryupdateordersummary1 = "update order_summary_paypal SET status_of_pay = 'Vendor Ack Pending', date_paid = '" + dateRxd + "', user_signature = '" + signature_user + "' where order_num = " + order_no; 
 		stmt.executeUpdate(queryupdateordersummary1);
 		
 		int balanceAmountUser =0;
@@ -141,17 +141,17 @@ public class broker extends Thread {
 		if(balanceAmountUser < amount ){
 			System.out.println("Insufficient balance");
 		}else{
-		String queryupdateuserdetails1 = "update user_details_paypal SET user_credit_available = user_credit_available " + "-" + amount + "where user_name = '" + user + "'";
+		String queryupdateuserdetails1 = "update user_details_paypal SET user_credit_available = user_credit_available - " + amount + " where user_name = '" + user + "'";
 		stmt.executeUpdate(queryupdateuserdetails1);
 
-		String queryupdateuserdetails2 = "update user_details_paypal SET user_credit_available = user_credit_available " + "+" + amount + "where user_name = '" + eComName + "'";
+		String queryupdateuserdetails2 = "update user_details_paypal SET user_credit_available = user_credit_available + " + amount + " where user_name = '" + eComName + "'";
 		stmt.executeUpdate(queryupdateuserdetails2);
 		}
 		
 		send_msg(ecomSock,crypt.encrypt(sb,ivKey,order_no+info2ecom+"Paid $"+amt));
 		String msg5 = get_msg(ecomSock);
 		
-		String queryupdateordersummary2 = "update order_summary_paypal SET status_of_pay = 'Paid', date_paid = '" + dateRxd + "', vendor_signature_ack = '" + signature_vendor + "'"; 
+		String queryupdateordersummary2 = "update order_summary_paypal SET status_of_pay = 'Paid', date_paid = '" + dateRxd + "', vendor_signature_ack = '" + signature_vendor + "' where order_num = " + order_no; 
 		stmt.executeUpdate(queryupdateordersummary2);
 		
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {

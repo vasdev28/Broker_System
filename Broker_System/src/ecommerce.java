@@ -128,11 +128,11 @@ public class ecommerce extends Thread {
 			}
 			send_msg(client,crypt.encrypt(sb, ivKey,"Bill," + crypt.encrypt(sc,ivKey,bill_no+",Give $"+price)));
 			
-			float amount = Integer.parseInt(price) * numberOfItemsSold;
+			int amount = Integer.parseInt(price) * numberOfItemsSold;
 			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			Date date = new Date();
 			String dateRxd = dateFormat.format(date);
-			String queryInsertaftermsg1 = "insert into broker_transaction_amazon values(''," + bill_no + ",'" + brokername + "'," + amount + ",'" + dateRxd + "','ongoing','')"; 
+			String queryInsertaftermsg1 = "insert into broker_transaction_amazon values(0," + bill_no + ",'" + brokername + "'," + amount + ",'" + dateRxd + "','ongoing','" + dateRxd + "')"; 
 			System.out.println("Query after msg 1 = " + queryInsertaftermsg1);
 			int checkifamazontableinsert = stmt.executeUpdate(queryInsertaftermsg1);
 			/*if(checkifamazontableinsert == 0){
@@ -147,7 +147,7 @@ public class ecommerce extends Thread {
 			String rxd_amt = msg4_reg[1];
 			int orderNo = Integer.parseInt(order_num);
 			
-			String queryUpdateAfterRxdMsg = "update broker_transaction_amazon SET order_num = " + orderNo +", payment_rxd_date = '" + dateRxd + "'";
+			String queryUpdateAfterRxdMsg = "update broker_transaction_amazon SET order_num = " + orderNo +", payment_rxd_date = '" + dateRxd + "' where bill_no = " + bill_no ;
 			int checkifamazontableupdated = stmt.executeUpdate(queryUpdateAfterRxdMsg); 
 			/*if(checkifamazontableupdated == 0){
 				System.out.println("updation of broker_transaction_amazon successfully");
@@ -188,10 +188,10 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				int itemRequested = sendInventory(server,"D:\\input.txt");
+				int itemRequested = sendInventory(server,"C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\input.txt");
 				System.out.println(itemRequested);
 				initiatePayment(server,itemRequested);
-				send_file(server,"D:\\s1.pdf");
+				send_file(server,"C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\s1.pdf");
 				System.out.println("File transfer done");
 				server.close();
 			} catch(SocketTimeoutException s) {

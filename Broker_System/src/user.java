@@ -105,7 +105,7 @@ public class user {
 		
 		Statement stmt = conn.createStatement();
 		
-		String queryinsertuserpurchasehistory = "insert into purchase_histroy_user values (" + Integer.parseInt(bill_no)  + "," + order_num + ",'paypal','" + eComName + "')";
+		String queryinsertuserpurchasehistory = "insert into purchase_history_user values (" + Integer.parseInt(bill_no)  + "," + order_num + ",'paypal','" + eComName + "')";
 		int checkifpurchasehistoryinserted = stmt.executeUpdate(queryinsertuserpurchasehistory);
 		
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
@@ -146,7 +146,7 @@ public class user {
 				System.out.println("2.Ecom ="+sc);
 				getInventory(client);
 				payBill(client);
-				get_file(client,"D:\\s2.pdf");
+				get_file(client,"C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\s2.pdf");
 				System.out.println("File Received");
 				client.close();
 			} catch(IOException e1) {
