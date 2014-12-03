@@ -22,6 +22,7 @@ public class ecommerce extends Thread {
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
 	private static String sb=null,sc=null,brokername = null;
+	private static String upload_file = "D:\\tmp1.txt";
 
 	public ecommerce(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
@@ -134,11 +135,7 @@ public class ecommerce extends Thread {
 			String dateRxd = dateFormat.format(date);
 			String queryInsertaftermsg1 = "insert into broker_transaction_amazon values(0," + bill_no + ",'" + brokername + "'," + amount + ",'" + dateRxd + "','ongoing','" + dateRxd + "')"; 
 			System.out.println("Query after msg 1 = " + queryInsertaftermsg1);
-			int checkifamazontableinsert = stmt.executeUpdate(queryInsertaftermsg1);
-			/*if(checkifamazontableinsert == 0){
-				System.out.println("Insertion into broker_transaction_amazon successfully");
-			}
-			*/
+			stmt.executeUpdate(queryInsertaftermsg1);
 			
 			String msg4 = crypt.decrypt(sb,ivKey,get_msg(client));
 			String msg4_reg[] = msg4.split("Paid .");
@@ -148,18 +145,11 @@ public class ecommerce extends Thread {
 			int orderNo = Integer.parseInt(order_num);
 			
 			String queryUpdateAfterRxdMsg = "update broker_transaction_amazon SET order_num = " + orderNo +", payment_rxd_date = '" + dateRxd + "' where bill_no = " + bill_no ;
-			int checkifamazontableupdated = stmt.executeUpdate(queryUpdateAfterRxdMsg); 
-			/*if(checkifamazontableupdated == 0){
-				System.out.println("updation of broker_transaction_amazon successfully");
-			}
-			*/
+			stmt.executeUpdate(queryUpdateAfterRxdMsg); 
 			
 			String queryinsertBillDetailsAmazon = "insert into bill_details_amazon values (" + bill_no + "," + numberOfItemsSold + "," + itemNo + ")";
-			int checkifinsertintoBillDetailsAmazon = stmt.executeUpdate(queryinsertBillDetailsAmazon);
-			/*if(checkifinsertintoBillDetailsAmazon == 0){
-				System.out.println("Insertion into Bill Details Amazon is successful");
-			}
-			*/
+			stmt.executeUpdate(queryinsertBillDetailsAmazon);
+			
 			send_msg(client,crypt.encrypt(sb,ivKey,order_num+"Signature"));
 			
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
@@ -188,10 +178,10 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				int itemRequested = sendInventory(server,"C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\input.txt");
+				int itemRequested = sendInventory(server,"D:\\input.txt");
 				System.out.println(itemRequested);
 				initiatePayment(server,itemRequested);
-				send_file(server,"C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\s1.pdf");
+				send_file(server,upload_file);
 				System.out.println("File transfer done");
 				server.close();
 			} catch(SocketTimeoutException s) {
