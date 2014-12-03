@@ -6,6 +6,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.io.*;
 
 import javax.crypto.BadPaddingException;
@@ -106,7 +109,7 @@ public class ecommerce extends Thread {
 
 	private static void initiatePayment(Socket client,int itemNo) {
 		String price;
-		int bill_no=1;
+		int bill_no=1,numberOfItemsSold=1;
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
 		try {
 			Connection conn = dbconn.connectToDatabase();
@@ -124,12 +127,41 @@ public class ecommerce extends Thread {
 				}
 			}
 			send_msg(client,crypt.encrypt(sb, ivKey,"Bill," + crypt.encrypt(sc,ivKey,bill_no+",Give $"+price)));
+			
+			float amount = Integer.parseInt(price) * numberOfItemsSold;
+			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+			Date date = new Date();
+			String dateRxd = dateFormat.format(date);
+			String queryInsertaftermsg1 = "insert into broker_transaction_amazon values(''," + bill_no + ",'" + brokername + "'," + amount + ",'" + dateRxd + "','ongoing','')"; 
+			System.out.println("Query after msg 1 = " + queryInsertaftermsg1);
+			int checkifamazontableinsert = stmt.executeUpdate(queryInsertaftermsg1);
+			/*if(checkifamazontableinsert == 0){
+				System.out.println("Insertion into broker_transaction_amazon successfully");
+			}
+			*/
+			
 			String msg4 = crypt.decrypt(sb,ivKey,get_msg(client));
 			String msg4_reg[] = msg4.split("Paid .");
 			String rxd_bill_no = crypt.decrypt(sc,ivKey,msg4_reg[0].substring(msg4_reg[0].length()-24,msg4_reg[0].length()));
 			String order_num = msg4_reg[0].substring(0,msg4_reg[0].length()-24);
 			String rxd_amt = msg4_reg[1];
+			int orderNo = Integer.parseInt(order_num);
+			
+			String queryUpdateAfterRxdMsg = "update broker_transaction_amazon SET order_num = " + orderNo +", payment_rxd_date = '" + dateRxd + "'";
+			int checkifamazontableupdated = stmt.executeUpdate(queryUpdateAfterRxdMsg); 
+			/*if(checkifamazontableupdated == 0){
+				System.out.println("updation of broker_transaction_amazon successfully");
+			}
+			*/
+			
+			String queryinsertBillDetailsAmazon = "insert into bill_details_amazon values (" + bill_no + "," + numberOfItemsSold + "," + itemNo + ")";
+			int checkifinsertintoBillDetailsAmazon = stmt.executeUpdate(queryinsertBillDetailsAmazon);
+			/*if(checkifinsertintoBillDetailsAmazon == 0){
+				System.out.println("Insertion into Bill Details Amazon is successful");
+			}
+			*/
 			send_msg(client,crypt.encrypt(sb,ivKey,order_num+"Signature"));
+			
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
