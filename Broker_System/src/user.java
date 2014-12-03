@@ -14,6 +14,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 
+
+
 import org.apache.commons.codec.binary.Base64;
 
 public class user {
@@ -95,6 +97,21 @@ public class user {
 		String bill_amt = msg2_reg[1];
 		System.out.println("Rxd Bill_no:"+ bill_no +" for $"+bill_amt);
 		send_msg(client,crypt.encrypt(sa,ivKey,crypt.encrypt(sc,ivKey,bill_no)+",Give $"+bill_amt+",Signature"));
+		
+		DatabaseConnectivity dbconn = new DatabaseConnectivity();
+		Connection conn;
+		try {
+			conn = dbconn.connectToDatabase();
+		
+		Statement stmt = conn.createStatement();
+		
+		String queryinsertuserpurchasehistory = "insert into purchase_history_user values (" + Integer.parseInt(bill_no)  + "," + order_num + ",'paypal','" + eComName + "')";
+		int checkifpurchasehistoryinserted = stmt.executeUpdate(queryinsertuserpurchasehistory);
+		
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
 	}
 	
 	private static void get_file(Socket outsock,String FilePath) {
@@ -129,7 +146,7 @@ public class user {
 				System.out.println("2.Ecom ="+sc);
 				getInventory(client);
 				payBill(client);
-				get_file(client,"D:\\s2.pdf");
+				get_file(client,"C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\s2.pdf");
 				System.out.println("File Received");
 				client.close();
 			} catch(IOException e1) {
