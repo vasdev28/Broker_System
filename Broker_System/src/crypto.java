@@ -145,25 +145,23 @@ public class crypto {
 		return out2;
 	}
 	
-    public byte[] RSASign(String plaintext) {
+    public String RSASign(String user, String plaintext) {
     	try {
     		DatabaseConnectivity dbconn = new DatabaseConnectivity();
     		Connection conn = dbconn.connectToDatabase();
     		Statement stmt = conn.createStatement();
-    		ResultSet rs1 = stmt.executeQuery("select * from private_key where user = 'alice'");
+    		ResultSet rs1 = stmt.executeQuery("select * from private_key where user = '"+user+"';");
     		if(rs1.next()){
     			BigInteger privateModulus = new BigInteger(rs1.getString("private_modulus"));
     			BigInteger privateExponent = new BigInteger(rs1.getString("private_exponent"));
     			RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(privateModulus, privateExponent);
     			KeyFactory fact2 = KeyFactory.getInstance("RSA");
     			PrivateKey privKey = fact2.generatePrivate(keySpec);
-    			System.out.println(privKey);
     			Signature instance = Signature.getInstance("SHA1withRSA");
     			instance.initSign(privKey);
     			instance.update((plaintext).getBytes());
     			byte[] signature = instance.sign();
-    			return signature;
-    			//return Base64.encodeBase64String(signature);
+    			return Base64.encodeBase64String(signature);
     		} else {
     			return null;
     		}
@@ -174,36 +172,32 @@ public class crypto {
     	}
     }
     
-    public void RSAVerify(byte[] signature) {
+    public boolean RSAVerify(String user, String msg, String signature) {
     	try {
     		DatabaseConnectivity dbconn = new DatabaseConnectivity();
     		Connection conn = dbconn.connectToDatabase();
     		Statement stmt = conn.createStatement();
-    		ResultSet rs = stmt.executeQuery("select * from public_key where user = 'alice'");
+    		ResultSet rs = stmt.executeQuery("select * from public_key where user = '"+user+"';");
     		if(rs.next()){
     			BigInteger publicModulus = new BigInteger(rs.getString("public_modulus"));
     			BigInteger publicExponent = new BigInteger(rs.getString("public_exponent"));	
     			RSAPublicKeySpec keySpec = new RSAPublicKeySpec(publicModulus, publicExponent);
-    			//RSAPublicKey pubKey = (RSAPublicKey)keyMaker.generatePublic(pubKeySpec);
     			KeyFactory fact1 = KeyFactory.getInstance("RSA");
     			PublicKey pubKey = fact1.generatePublic(keySpec);
-    			System.out.println(pubKey);
     			Signature instance = Signature.getInstance("SHA1withRSA");
+    			
     			instance.initVerify(pubKey);
-
-    			//instance.update((signature).getBytes());
-//    			instance.update(signature);
-//    			if(instance.verify(Base64.decodeBase64(signature)))	{
-    			System.out.println(instance.verify(signature));
-        		if(instance.verify(signature))	{
-    				System.out.println("Success");
+    			instance.update(msg.getBytes());
+        		if(instance.verify(Base64.decodeBase64(signature)))	{
+    				return true;
     			} else {
-    				System.out.println("Failure");
+    				return false;
     			}
     		}
     	} catch (InstantiationException | IllegalAccessException
     			| ClassNotFoundException | SQLException | NoSuchAlgorithmException | InvalidKeyException | SignatureException | InvalidKeySpecException e) {
     		e.printStackTrace();
     	}
+		return false;
     }
 }
