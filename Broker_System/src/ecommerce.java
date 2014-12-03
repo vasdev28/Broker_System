@@ -21,7 +21,7 @@ public class ecommerce extends Thread {
 	private ServerSocket serverSocket;
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
-	private static String sb=null,sc=null,brokername = null;
+	private static String sb=null,sc=null,brokername = null,eComName;
 	private static String upload_file = "D:\\tmp1.txt";
 
 	public ecommerce(int port) throws IOException {
@@ -128,7 +128,7 @@ public class ecommerce extends Thread {
 				}
 			}
 			send_msg(client,crypt.encrypt(sb, ivKey,"Bill," + crypt.encrypt(sc,ivKey,bill_no+",Give $"+price)));
-			
+
 			int amount = Integer.parseInt(price) * numberOfItemsSold;
 			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			Date date = new Date();
@@ -136,22 +136,22 @@ public class ecommerce extends Thread {
 			String queryInsertaftermsg1 = "insert into broker_transaction_amazon values(0," + bill_no + ",'" + brokername + "'," + amount + ",'" + dateRxd + "','ongoing','" + dateRxd + "')"; 
 			System.out.println("Query after msg 1 = " + queryInsertaftermsg1);
 			stmt.executeUpdate(queryInsertaftermsg1);
-			
+
 			String msg4 = crypt.decrypt(sb,ivKey,get_msg(client));
 			String msg4_reg[] = msg4.split("Paid .");
 			String rxd_bill_no = crypt.decrypt(sc,ivKey,msg4_reg[0].substring(msg4_reg[0].length()-24,msg4_reg[0].length()));
 			String order_num = msg4_reg[0].substring(0,msg4_reg[0].length()-24);
 			String rxd_amt = msg4_reg[1];
 			int orderNo = Integer.parseInt(order_num);
-			
+
 			String queryUpdateAfterRxdMsg = "update broker_transaction_amazon SET order_num = " + orderNo +", payment_rxd_date = '" + dateRxd + "' where bill_no = " + bill_no ;
 			stmt.executeUpdate(queryUpdateAfterRxdMsg); 
-			
+
 			String queryinsertBillDetailsAmazon = "insert into bill_details_amazon values (" + bill_no + "," + numberOfItemsSold + "," + itemNo + ")";
 			stmt.executeUpdate(queryinsertBillDetailsAmazon);
-			
-			send_msg(client,crypt.encrypt(sb,ivKey,order_num+"Signature"));
-			
+			String signature = crypt.RSASign(eComName, orderNo+",Rxd $"+rxd_amt);
+			send_msg(client,crypt.encrypt(sb,ivKey,order_num+","+signature));
+
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -199,7 +199,8 @@ public class ecommerce extends Thread {
 	}
 
 	public static void main(String [] args) {
-		int port = Integer.parseInt(args[0]);
+		eComName = args[0];
+		int port = Integer.parseInt(args[1]);
 		try {
 			Thread t = new ecommerce(port);
 			t.start();

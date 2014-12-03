@@ -44,7 +44,7 @@ public class user {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void getSessKeyBroker(Socket client,String secKey) throws IllegalArgumentException {
 		int n=crypt.randInt(1,1000);
 		send_msg(client,uname+crypt.encrypt(secKey,ivKey,Integer.toString(n)));
@@ -59,7 +59,7 @@ public class user {
 			send_msg(client,crypt.encrypt(sa, ivKey, n2+eComName));
 		}	   
 	}
-	
+
 	private static void getSessKeyEcomm(Socket server) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		get_msg(server);
 		sc = crypt.genKey();
@@ -70,20 +70,20 @@ public class user {
 			System.out.println("Session Key Estb Failed\n");
 		}
 	}
-	
+
 	private static void getInventory(Socket client) {
 		try {
 			send_msg(client,"Please Send the list");
 			String str = get_msg(client);
 			byte[] b2 = Base64.decodeBase64(crypt.decrypt(sc,sc,str));
-		    FileOutputStream fos = new FileOutputStream("output.txt");
-		    BufferedOutputStream bos = new BufferedOutputStream(fos);
-		    bos.write(b2, 0, b2.length);
-		    System.out.println("Enter name of product u want:");
-		    Scanner in = new Scanner(System.in);
-		    String inputFromUser = in.nextLine();
-		    send_msg(client, crypt.encrypt(sc, sc, inputFromUser.toUpperCase()));
-		    bos.close();
+			FileOutputStream fos = new FileOutputStream("output.txt");
+			BufferedOutputStream bos = new BufferedOutputStream(fos);
+			bos.write(b2, 0, b2.length);
+			System.out.println("Enter name of product u want:");
+			Scanner in = new Scanner(System.in);
+			String inputFromUser = in.nextLine();
+			send_msg(client, crypt.encrypt(sc, sc, inputFromUser.toUpperCase()));
+			bos.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -97,37 +97,38 @@ public class user {
 		String bill_no = msg2_reg[0];
 		String bill_amt = msg2_reg[1];
 		System.out.println("Rxd Bill_no:"+ bill_no +" for $"+bill_amt);
-		send_msg(client,crypt.encrypt(sa,ivKey,crypt.encrypt(sc,ivKey,bill_no)+",Give $"+bill_amt+",Signature"));
-		
+		String signature = crypt.RSASign(uname, order_num+",Give $"+bill_amt);
+		send_msg(client,crypt.encrypt(sa,ivKey,crypt.encrypt(sc,ivKey,bill_no)+",Give $"+bill_amt+","+signature));
+
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
 		Connection conn;
 		try {
 			conn = dbconn.connectToDatabase();
-		
-		Statement stmt = conn.createStatement();
-		
-		String queryinsertuserpurchasehistory = "insert into purchase_history_user values (" + Integer.parseInt(bill_no)  + "," + order_num + ",'paypal','" + eComName + "')";
-		int checkifpurchasehistoryinserted = stmt.executeUpdate(queryinsertuserpurchasehistory);
-		
+
+			Statement stmt = conn.createStatement();
+
+			String queryinsertuserpurchasehistory = "insert into purchase_history_user values (" + Integer.parseInt(bill_no)  + "," + order_num + ",'paypal','" + eComName + "')";
+			int checkifpurchasehistoryinserted = stmt.executeUpdate(queryinsertuserpurchasehistory);
+
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 	}
-	
+
 	private static void get_file(Socket outsock,String FilePath) {
 		try {
 			String str = get_msg(outsock);
 			byte[] b2 = Base64.decodeBase64(crypt.decrypt(sc,sc,str));
-		    FileOutputStream fos = new FileOutputStream(FilePath);
-		    BufferedOutputStream bos = new BufferedOutputStream(fos);
-		    bos.write(b2, 0, b2.length);
-		    bos.close();
+			FileOutputStream fos = new FileOutputStream(FilePath);
+			BufferedOutputStream bos = new BufferedOutputStream(fos);
+			bos.write(b2, 0, b2.length);
+			bos.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void main(String [] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException  {
 		uname = args[0];
 		String broker_ip = args[1];
