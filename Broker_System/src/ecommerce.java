@@ -22,7 +22,7 @@ public class ecommerce extends Thread {
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
 	private static String sb=null,sc=null,brokername = null,eComName;
-	private static String upload_file = "D:\\tmp1.txt";
+	private static String upload_file = "C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\tmp1.txt";
 
 	public ecommerce(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
@@ -79,10 +79,12 @@ public class ecommerce extends Thread {
 	}
 
 	private static int sendInventory(Socket client, String FilePath) {
+		
 		int output_index=0;
 		String msg = get_msg(client);
 		System.out.println(msg);
 		try {
+			
 			File myFile = new File(FilePath);
 			byte[] mybytearray = new byte[(int) myFile.length()];
 			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(myFile));
@@ -102,6 +104,7 @@ public class ecommerce extends Thread {
 				line = reader.readLine();
 			}
 			reader.close();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -109,12 +112,23 @@ public class ecommerce extends Thread {
 	}
 
 	private static void initiatePayment(Socket client,int itemNo) {
-		String price;
-		int bill_no=1,numberOfItemsSold=1;
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
 		try {
-			Connection conn = dbconn.connectToDatabase();
-			Statement stmt = conn.createStatement();
+		Connection conn = dbconn.connectToDatabase();
+		Statement stmt = conn.createStatement();
+		String numberItems =null;
+		ResultSet rs3 = stmt.executeQuery("select * from vendor_inventory_amazon where item_no = " + itemNo);
+		if(rs3.next())
+			numberItems = rs3.getString("number_items_avail");
+		if(numberItems.equals("0")){
+			System.out.println("The item you requested is out of Stock, Sorry for the inconveneince ");
+			System.out.println("Error processing payment. Item you requested is unavailable. Please try again");
+			//error message must be added
+		}
+		else{
+		String price;
+		int bill_no=1,numberOfItemsSold=1;
+
 			ResultSet rs = stmt.executeQuery("select * from vendor_inventory_amazon where item_no = " + itemNo);
 			if (rs.next()) {
 				price = rs.getString("item_price");
@@ -134,7 +148,7 @@ public class ecommerce extends Thread {
 			Date date = new Date();
 			String dateRxd = dateFormat.format(date);
 			String queryInsertaftermsg1 = "insert into broker_transaction_amazon values(0," + bill_no + ",'" + brokername + "'," + amount + ",'" + dateRxd + "','ongoing','" + dateRxd + "')"; 
-			System.out.println("Query after msg 1 = " + queryInsertaftermsg1);
+			//System.out.println("Query after msg 1 = " + queryInsertaftermsg1);
 			stmt.executeUpdate(queryInsertaftermsg1);
 
 			String msg4 = crypt.decrypt(sb,ivKey,get_msg(client));
@@ -144,14 +158,17 @@ public class ecommerce extends Thread {
 			String rxd_amt = msg4_reg[1];
 			int orderNo = Integer.parseInt(order_num);
 
-			String queryUpdateAfterRxdMsg = "update broker_transaction_amazon SET order_num = " + orderNo +", payment_rxd_date = '" + dateRxd + "' where bill_no = " + bill_no ;
+			String queryUpdateAfterRxdMsg = "update broker_transaction_amazon SET order_num = " + orderNo +", payment_rxd_date = '" + dateRxd + "', status = 'received' where bill_no = " + bill_no ;
 			stmt.executeUpdate(queryUpdateAfterRxdMsg); 
 
 			String queryinsertBillDetailsAmazon = "insert into bill_details_amazon values (" + bill_no + "," + numberOfItemsSold + "," + itemNo + ")";
 			stmt.executeUpdate(queryinsertBillDetailsAmazon);
 			String signature = crypt.RSASign(eComName, orderNo+",Rxd $"+rxd_amt);
 			send_msg(client,crypt.encrypt(sb,ivKey,order_num+","+signature));
-
+			
+			String queryupdateAmazonInventoryNumberItems = "update vendor_inventory_amazon SET number_items_avail = number_items_avail - " + numberOfItemsSold + " , number_sold = number_sold + " + numberOfItemsSold + " where item_no = " + itemNo;
+			stmt.executeUpdate(queryupdateAmazonInventoryNumberItems);
+		}
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -178,7 +195,7 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				int itemRequested = sendInventory(server,"D:\\input.txt");
+				int itemRequested = sendInventory(server,"C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\input.txt");
 				System.out.println(itemRequested);
 				initiatePayment(server,itemRequested);
 				send_file(server,upload_file);

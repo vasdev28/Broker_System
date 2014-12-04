@@ -100,7 +100,6 @@ public class broker extends Thread {
 
 	private static void processPayment(Socket userSock, Socket ecomSock) {
 		int order_no=1;
-		String signature_vendor = "";
 		try {
 			DatabaseConnectivity dbconn = new DatabaseConnectivity();
 			Connection conn = dbconn.connectToDatabase();

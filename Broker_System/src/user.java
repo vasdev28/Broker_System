@@ -23,7 +23,7 @@ public class user {
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
 	private static String sa =null, sc=null;
-	private static String download_path = "D:\\tmp2.txt";
+	private static String download_path = "C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\tmp2.txt";
 
 	private static String get_msg(Socket insock) {
 		try {
