@@ -159,8 +159,8 @@ public class crypto {
     			BigInteger privateModulus = new BigInteger(rs1.getString("private_modulus"));
     			BigInteger privateExponent = new BigInteger(rs1.getString("private_exponent"));
     	   		rs1.close();
-        		conn.close();
         		stmt.close();
+        		conn.close();
     			RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(privateModulus, privateExponent);
     			KeyFactory fact2 = KeyFactory.getInstance("RSA");
     			PrivateKey privKey = fact2.generatePrivate(keySpec);
@@ -171,8 +171,8 @@ public class crypto {
      			return Base64.encodeBase64String(signature);
     		} else {
     			rs1.close();
-        		conn.close();
         		stmt.close();
+        		conn.close();
     			return null;
     		}
     	} catch (InstantiationException | IllegalAccessException
@@ -190,7 +190,10 @@ public class crypto {
     		ResultSet rs = stmt.executeQuery("select * from public_key where user = '"+user+"';");
     		if(rs.next()){
     			BigInteger publicModulus = new BigInteger(rs.getString("public_modulus"));
-    			BigInteger publicExponent = new BigInteger(rs.getString("public_exponent"));	
+    			BigInteger publicExponent = new BigInteger(rs.getString("public_exponent"));
+    			rs.close();
+        		stmt.close();
+        		conn.close();
     			RSAPublicKeySpec keySpec = new RSAPublicKeySpec(publicModulus, publicExponent);
     			KeyFactory fact1 = KeyFactory.getInstance("RSA");
     			PublicKey pubKey = fact1.generatePublic(keySpec);
@@ -198,14 +201,15 @@ public class crypto {
     			
     			instance.initVerify(pubKey);
     			instance.update(msg.getBytes());
-    			rs.close();
-        		conn.close();
-        		stmt.close();
         		if(instance.verify(Base64.decodeBase64(signature)))	{
     				return true;
     			} else {
     				return false;
     			}
+    		} else {
+    			rs.close();
+        		stmt.close();
+        		conn.close();
     		}
     	} catch (InstantiationException | IllegalAccessException
     			| ClassNotFoundException | SQLException | NoSuchAlgorithmException | InvalidKeyException | SignatureException | InvalidKeySpecException e) {
