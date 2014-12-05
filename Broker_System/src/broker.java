@@ -64,6 +64,7 @@ public class broker extends Thread {
 		} else{
 			System.out.println("\n Could not find user sec key \n");
 		}
+		conn.close();
 	}
 
 	private static void getSessKeyEcom(Socket server,String secKey) throws IllegalArgumentException {
@@ -114,8 +115,11 @@ public class broker extends Thread {
 			}
 			String msg1 = crypt.decrypt(sb, ivKey, get_msg(ecomSock));
 			if(msg1.contains("Error")) {
+				
 				send_msg(userSock,crypt.encrypt(sa,ivKey,msg1));
+				conn.close();
 				return 0;
+				
 			}
 			int balanceAmountUser= 0, rxd_bill_amt = 65535;
 			ResultSet rs1 = stmt.executeQuery("select * from user_details_paypal where user_name = '" + user +"'");
@@ -127,6 +131,7 @@ public class broker extends Thread {
 					System.out.println("Insufficient balance:Avlbl Balance ="+balanceAmountUser+"Rxd_bill="+rxd_bill_amt);
 					send_msg(userSock,crypt.encrypt(sa,ivKey,"Error: Credit Limit Reached!!!"));
 					send_msg(ecomSock,crypt.encrypt(sb, ivKey,"Error: User doesn't have enough credits!!!"));
+					conn.close();
 					return 0;
 				}
 			}
@@ -172,9 +177,11 @@ public class broker extends Thread {
 			}
 			String queryupdateordersummary2 = "update order_summary_paypal SET status_of_pay = 'Paid', date_paid = '" + dateRxd + "', vendor_signature_ack = '" + ecomsignature + "' where order_num = " + order_no; 
 			stmt.executeUpdate(queryupdateordersummary2);
+			conn.close();
 			return 1;
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			e.printStackTrace();
+			
 			return 0;
 		}
 	}
@@ -208,6 +215,7 @@ public class broker extends Thread {
 					passMsg(client,server);
 				}
 				server.close();
+				conn.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");
 				break;

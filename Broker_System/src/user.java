@@ -18,7 +18,7 @@ public class user {
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
 	private static String sa =null, sc=null;
-	private static String download_path = "D:\\tmp2.txt";
+	private static String download_path = "tmp2.txt";
 
 	private static String get_msg(Socket insock) {
 		try {
@@ -105,10 +105,12 @@ public class user {
 			Statement stmt = conn.createStatement();
 			String queryinsertuserpurchasehistory = "insert into purchase_history_user values (" + Integer.parseInt(bill_no)  + "," + order_num + ",'paypal','" + eComName + "')";
 			int checkifpurchasehistoryinserted = stmt.executeUpdate(queryinsertuserpurchasehistory);
+			conn.close();
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
 			e.printStackTrace();
 			return 0;
 		} 
+		
 		return 1;
 	}
 
@@ -150,6 +152,7 @@ public class user {
 					System.out.println("Error in payment. Process Aborted");
 				}
 				client.close();
+				conn.close();
 			} catch(IOException e1) {
 				System.out.println("Connection Timed out!!!");
 				e1.printStackTrace();

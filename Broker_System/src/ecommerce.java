@@ -21,7 +21,7 @@ public class ecommerce extends Thread {
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
 	private static String sb=null,sc=null,brokername = null,eComName;
-	private static String upload_file = "D:\\tmp1.txt";
+	private static String upload_file = "tmp1.txt";
 
 	public ecommerce(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
@@ -69,6 +69,7 @@ public class ecommerce extends Thread {
 			System.out.println("\n Could not find user sec key \n");
 		}
 		brokername = brokerName;
+		conn.close();
 	}
 
 	private static void getSessKeyUser(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
@@ -125,6 +126,7 @@ public class ecommerce extends Thread {
 		
 		if(numberItems==0) {
 			send_msg(client,crypt.encrypt(sb,ivKey,"Error: Items out-of-stock!!!"));
+			conn.close();
 			return 0;
 		} else {
 			int bill_no=1,numberOfItemsSold=1;
@@ -148,6 +150,7 @@ public class ecommerce extends Thread {
 			String msg4 = crypt.decrypt(sb,ivKey,get_msg(client));
 			if (msg4.contains("Error")) {
 				System.out.println("Payment Aborted by user due to insufficient credits");
+				conn.close();
 				return 0;
 			}
 			String msg4_reg[] = msg4.split("Paid .");
@@ -166,12 +169,14 @@ public class ecommerce extends Thread {
 			
 			String queryupdateAmazonInventoryNumberItems = "update vendor_inventory_amazon SET number_items_avail = number_items_avail - " + numberOfItemsSold + " , number_sold = number_sold + " + numberOfItemsSold + " where item_no = " + itemNo;
 			stmt.executeUpdate(queryupdateAmazonInventoryNumberItems);
+			conn.close();
 			return 1;
 		}
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			e.printStackTrace();
 			return 0;
 		}
+		
 	}
 
 	private static void send_file(Socket outsock,String FilePath) {
@@ -195,7 +200,7 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				int itemRequested = sendInventory(server,"D:\\input.txt");
+				int itemRequested = sendInventory(server,"input.txt");
 				System.out.println(itemRequested);
 				if(initiatePayment(server,itemRequested)!=0) {
 					send_file(server,upload_file);
