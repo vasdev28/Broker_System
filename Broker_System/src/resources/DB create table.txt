@@ -1,0 +1,97 @@
+ECOM:
+
+create table bill_details_amazon(
+ bill_no int primary key,
+ number_of_items_sold int,
+ item_no int);
+
+   
+create table broker_details_amazon(
+ broker_name varchar(45) primary key,
+ shared_key varchar(999));
+
+
+
+create table broker_transaction_amazon(
+ order_num int,
+ bill_no int primary key,
+ broker_name varchar(45),
+ amount decimal(5,2),
+ date datetime,
+ status varchar(45),
+ payment_rxd_date datetime);
+
+ 
+create table vendor_inventory_amazon(
+  number_items_avail int,
+  number_sold int,
+  item_price int,
+  item_name varchar(45));
+   
+create table private_key(
+ user varchar(45) primary key,
+ private_exponent varchar(999),
+ private_modulus varchar(999));
+
+ create table public_key(
+ user varchar(45) primary key,
+ public_exponent varchar(999),
+ public_modulus varchar(999));
+ 
+ 
+ BROKER:
+   
+ create table order_summary_paypal(
+    order_num int primary key,
+    user_name varchar(45),
+    status_of_pay varchar(45),
+    date_paid datetime,
+    user_signature varchar(999),
+    vendor_signature_ack varchar(999),
+    vendor_name varchar(45));
+
+ 
+create table user_details_paypal(
+ user_name varchar(45) primary key,
+ user_credit_available int,
+ type varchar(45),
+ user_secret_key varchar(999));
+
+ 
+ create table private_key(
+ user varchar(45) primary key,
+ private_exponent varchar(999),
+ private_modulus varchar(999));
+
+ create table public_key(
+ user varchar(45) primary key,
+ public_exponent varchar(999),
+ public_modulus varchar(999));
+
+ 
+ 
+ USER:
+ 
+create table purchase_history_user(
+   bill_no int,
+   order_num int,
+   broker_name varchar(45),
+   vendor_name varchar(45));
+ 
+
+create table broker_info(
+ uname varchar(45) primary key,
+ broker varchar(45),
+ secKey varchar(45));
+
+
+
+create table private_key(
+ user varchar(45) primary key,
+ private_exponent varchar(999),
+ private_modulus varchar(999));
+
+ create table public_key(
+ user varchar(45) primary key,
+ public_exponent varchar(999),
+ public_modulus varchar(999));

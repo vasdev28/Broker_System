@@ -101,7 +101,7 @@ public class user {
 
 		try {
 			DatabaseConnectivity dbconn = new DatabaseConnectivity();
-			Connection conn = dbconn.connectToDatabase();
+			Connection conn = dbconn.connectToDatabase("user");
 			Statement stmt = conn.createStatement();
 			String queryinsertuserpurchasehistory = "insert into purchase_history_user values (" + Integer.parseInt(bill_no)  + "," + order_num + ",'paypal','" + eComName + "')";
 			int checkifpurchasehistoryinserted = stmt.executeUpdate(queryinsertuserpurchasehistory);
@@ -131,9 +131,9 @@ public class user {
 		int broker_port = Integer.parseInt(args[2]);
 		eComName = args[3];
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-		Connection conn = dbconn.connectToDatabase();
+		Connection conn = dbconn.connectToDatabase("user");
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("select * from user_info where broker = 'paypal' AND uname = '"+uname+"';");
+		ResultSet rs = stmt.executeQuery("select * from broker_info where broker = 'paypal' AND uname = '"+uname+"';");
 		if(rs.next()){
 			String secKey = rs.getString("secKey");
 			try {

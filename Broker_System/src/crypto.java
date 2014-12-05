@@ -30,8 +30,6 @@ import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
 
-import java.util.ArrayList;
-
 public class crypto {
 	public static String shapeKey(String key) {
 		return (key+"0000000000000000").substring(0,16);
@@ -95,7 +93,7 @@ public class crypto {
 		
 		System.out.println("priEx= " + privateExponent + "\npriMod" + privateModulus + "\n pubExp = " + publicExponent + "\n pubMod = " + publicModulus );
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-		Connection conn = dbconn.connectToDatabase();
+		Connection conn = dbconn.connectToDatabase("ecom");
 		Statement stmt = conn.createStatement();
 		stmt.executeUpdate("insert into public_key values ('" + user + "','" + publicExponent.toString() + "','" + publicModulus.toString() + "')");
 		stmt.executeUpdate("insert into private_key values ('" + user + "','" + privateExponent.toString() + "','" + privateModulus.toString() + "')");		
@@ -104,7 +102,7 @@ public class crypto {
 	public String RSAEncrypt(String user, String msg) throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		String outp1 = null;
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-		Connection conn = dbconn.connectToDatabase();
+		Connection conn = dbconn.connectToDatabase("ecom");
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select * from public_key where user = '" + user + "'");
 		if(rs.next()){
@@ -126,7 +124,7 @@ public class crypto {
 	public String RSADecrypt(String user, String msg) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		String out2 = null;
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-		Connection conn = dbconn.connectToDatabase();
+		Connection conn = dbconn.connectToDatabase("ecom");
 		Statement stmt = conn.createStatement();
 		ResultSet rs1 = stmt.executeQuery("select * from private_key where user = '" + user + "'");
 		if(rs1.next()){
@@ -148,7 +146,7 @@ public class crypto {
     public String RSASign(String user, String plaintext) {
     	try {
     		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-    		Connection conn = dbconn.connectToDatabase();
+    		Connection conn = dbconn.connectToDatabase("ecom");
     		Statement stmt = conn.createStatement();
     		ResultSet rs1 = stmt.executeQuery("select * from private_key where user = '"+user+"';");
     		if(rs1.next()){
@@ -175,7 +173,7 @@ public class crypto {
     public boolean RSAVerify(String user, String msg, String signature) {
     	try {
     		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-    		Connection conn = dbconn.connectToDatabase();
+    		Connection conn = dbconn.connectToDatabase("ecom");
     		Statement stmt = conn.createStatement();
     		ResultSet rs = stmt.executeQuery("select * from public_key where user = '"+user+"';");
     		if(rs.next()){
