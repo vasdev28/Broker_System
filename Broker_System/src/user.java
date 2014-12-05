@@ -139,6 +139,9 @@ public class user {
 		ResultSet rs = stmt.executeQuery("select * from broker_info where broker = 'paypal' AND uname = '"+uname+"';");
 		if(rs.next()){
 			String secKey = rs.getString("secKey");
+			rs.close();
+			stmt.close();
+			conn.close();
 			try {
 				Socket client = new Socket(broker_ip, broker_port);
 				getSessKeyBroker(client,secKey);
@@ -152,9 +155,6 @@ public class user {
 				} else {
 					System.out.println("Error in payment. Process Aborted");
 				}
-				rs.close();
-				stmt.close();
-				conn.close();
 				client.close();
 			} catch(IOException e1) {
 				System.out.println("Connection Timed out!!!");
@@ -164,6 +164,7 @@ public class user {
 			}
 		} else {
 			System.out.println("\n The broker secret key was not found \n");
+			
 		}
 	}
 }

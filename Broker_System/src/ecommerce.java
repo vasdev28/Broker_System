@@ -58,6 +58,9 @@ public class ecommerce extends Thread {
 		sb = crypt.genKey();
 		if(rs.next()) {
 			String secKey = rs.getString("shared_key");
+			rs.close();
+			stmt.close();
+			conn.close();
 			String userNonce = crypt.decrypt(secKey,ivKey,msg1.substring(msg1.length()-24,msg1.length()));
 			String myNonce = Integer.toString(crypt.randInt(1, 1000));
 			send_msg(server,crypt.encrypt(secKey,ivKey,sb+userNonce+myNonce));
@@ -66,12 +69,12 @@ public class ecommerce extends Thread {
 				System.out.println("Nonces dont match for "+brokerName+".Exp:"+myNonce+"\tRxd:"+msg3.substring(0,myNonce.length()));
 			}
 		} else{
+			rs.close();
+			stmt.close();
+			conn.close();
 			System.out.println("\n Could not find user sec key \n");
 		}
 		brokername = brokerName;
-		rs.close();
-		stmt.close();
-		conn.close();
 	}
 
 	private static void getSessKeyUser(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
@@ -81,7 +84,6 @@ public class ecommerce extends Thread {
 	}
 
 	private static int sendInventory(Socket client, String FilePath) {
-		
 		int output_index=0;
 		String msg = get_msg(client);
 		System.out.println(msg);

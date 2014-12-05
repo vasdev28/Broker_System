@@ -96,7 +96,9 @@ public class crypto {
 		Connection conn = dbconn.connectToDatabase("ecom");
 		Statement stmt = conn.createStatement();
 		stmt.executeUpdate("insert into public_key values ('" + user + "','" + publicExponent.toString() + "','" + publicModulus.toString() + "')");
-		stmt.executeUpdate("insert into private_key values ('" + user + "','" + privateExponent.toString() + "','" + privateModulus.toString() + "')");		
+		stmt.executeUpdate("insert into private_key values ('" + user + "','" + privateExponent.toString() + "','" + privateModulus.toString() + "')");
+		stmt.close();
+		conn.close();
 	}
 
 	public String RSAEncrypt(String user, String msg) throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
@@ -118,6 +120,8 @@ public class crypto {
 		} else {
 			System.out.println("The Public Key of user could not be found \n");
 		}
+		stmt.close();
+		conn.close();
 		return outp1;
 	}
 
@@ -140,6 +144,8 @@ public class crypto {
 		} else {
 			System.out.println("The Private key of user could not be found \n");
 		}
+		stmt.close();
+		conn.close();
 		return out2;
 	}
 	
@@ -152,6 +158,9 @@ public class crypto {
     		if(rs1.next()){
     			BigInteger privateModulus = new BigInteger(rs1.getString("private_modulus"));
     			BigInteger privateExponent = new BigInteger(rs1.getString("private_exponent"));
+    	   		rs1.close();
+        		conn.close();
+        		stmt.close();
     			RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(privateModulus, privateExponent);
     			KeyFactory fact2 = KeyFactory.getInstance("RSA");
     			PrivateKey privKey = fact2.generatePrivate(keySpec);
@@ -159,8 +168,11 @@ public class crypto {
     			instance.initSign(privKey);
     			instance.update((plaintext).getBytes());
     			byte[] signature = instance.sign();
-    			return Base64.encodeBase64String(signature);
+     			return Base64.encodeBase64String(signature);
     		} else {
+    			rs1.close();
+        		conn.close();
+        		stmt.close();
     			return null;
     		}
     	} catch (InstantiationException | IllegalAccessException
@@ -186,6 +198,9 @@ public class crypto {
     			
     			instance.initVerify(pubKey);
     			instance.update(msg.getBytes());
+    			rs.close();
+        		conn.close();
+        		stmt.close();
         		if(instance.verify(Base64.decodeBase64(signature)))	{
     				return true;
     			} else {
