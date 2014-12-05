@@ -103,7 +103,7 @@ public class user {
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
 		Connection conn;
 		try {
-			conn = dbconn.connectToDatabase();
+			conn = dbconn.connectToDatabase("user");
 
 			Statement stmt = conn.createStatement();
 
@@ -135,9 +135,9 @@ public class user {
 		int broker_port = Integer.parseInt(args[2]);
 		eComName = args[3];
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-		Connection conn = dbconn.connectToDatabase();
+		Connection conn = dbconn.connectToDatabase("user");
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("select * from user_info where broker = 'paypal' AND uname = '"+uname+"';");
+		ResultSet rs = stmt.executeQuery("select * from broker_info where broker = 'paypal' AND uname = '"+uname+"';");
 		if(rs.next()){
 			String secKey = rs.getString("secKey");
 			try {

@@ -47,7 +47,7 @@ public class broker extends Thread {
 		String msg1=get_msg(server);
 		user = msg1.substring(0,msg1.length()-24);
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-		Connection conn = dbconn.connectToDatabase();
+		Connection conn = dbconn.connectToDatabase("broker");
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select * from user_details_paypal where user_name = '" + user.toLowerCase() + "'");
 		sa = crypt.genKey();
@@ -102,7 +102,7 @@ public class broker extends Thread {
 		int order_no=1;
 		try {
 			DatabaseConnectivity dbconn = new DatabaseConnectivity();
-			Connection conn = dbconn.connectToDatabase();
+			Connection conn = dbconn.connectToDatabase("broker");
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery("select max(bill_no)+1 as max from bill_details_amazon");
 			if (rs.next()) {
@@ -177,7 +177,7 @@ public class broker extends Thread {
 		while(true) {
 			try {
 				DatabaseConnectivity dbconn = new DatabaseConnectivity();
-				Connection conn = dbconn.connectToDatabase();
+				Connection conn = dbconn.connectToDatabase("broker");
 				Statement stmt = conn.createStatement();
 
 				Socket server = serverSocket.accept();

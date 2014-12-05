@@ -10,7 +10,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.io.*;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -53,7 +52,7 @@ public class ecommerce extends Thread {
 		String msg1=get_msg(server);
 		String brokerName = msg1.substring(0,msg1.length()-24);
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-		Connection conn = dbconn.connectToDatabase();
+		Connection conn = dbconn.connectToDatabase("ecom");
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select * from broker_details_amazon where broker_name = '" + brokerName.toLowerCase() + "'");
 		sb = crypt.genKey();
@@ -114,7 +113,7 @@ public class ecommerce extends Thread {
 	private static void initiatePayment(Socket client,int itemNo) {
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
 		try {
-		Connection conn = dbconn.connectToDatabase();
+		Connection conn = dbconn.connectToDatabase("ecom");
 		Statement stmt = conn.createStatement();
 		String numberItems =null;
 		ResultSet rs3 = stmt.executeQuery("select * from vendor_inventory_amazon where item_no = " + itemNo);
