@@ -98,13 +98,13 @@ public class broker extends Thread {
 		passMsg(userSock,ecomSock);
 	}
 
-	private static void processPayment(Socket userSock, Socket ecomSock) {
+	private static int processPayment(Socket userSock, Socket ecomSock) {
 		int order_no=1;
 		try {
 			DatabaseConnectivity dbconn = new DatabaseConnectivity();
 			Connection conn = dbconn.connectToDatabase();
 			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery("select max(bill_no)+1 as max from bill_details_amazon");
+			ResultSet rs = stmt.executeQuery("select max(order_num)+1 as max from order_summary_paypal");
 			if (rs.next()) {
 				try {
 					order_no = Integer.parseInt(rs.getString("max"));
@@ -113,7 +113,24 @@ public class broker extends Thread {
 				}
 			}
 			String msg1 = crypt.decrypt(sb, ivKey, get_msg(ecomSock));
-			String msg2_sub = msg1.substring(5,msg1.length());
+			if(msg1.contains("Error")) {
+				send_msg(userSock,crypt.encrypt(sa,ivKey,msg1));
+				return 0;
+			}
+			int balanceAmountUser= 0, rxd_bill_amt = 65535;
+			ResultSet rs1 = stmt.executeQuery("select * from user_details_paypal where user_name = '" + user +"'");
+			if(rs1.next()) {
+				balanceAmountUser = Integer.parseInt(rs1.getString("user_credit_available"));
+				String msg1_reg[] = msg1.split(",.");
+				rxd_bill_amt = Integer.parseInt(msg1_reg[2]);
+				if(balanceAmountUser < rxd_bill_amt) {
+					System.out.println("Insufficient balance:Avlbl Balance ="+balanceAmountUser+"Rxd_bill="+rxd_bill_amt);
+					send_msg(userSock,crypt.encrypt(sa,ivKey,"Error: Credit Limit Reached!!!"));
+					send_msg(ecomSock,crypt.encrypt(sb, ivKey,"Error: User doesn't have enough credits!!!"));
+					return 0;
+				}
+			}
+			String msg2_sub = msg1.substring(5,29);
 			send_msg(userSock,crypt.encrypt(sa, ivKey, order_no+msg2_sub));
 			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			Date date = new Date();
@@ -137,20 +154,12 @@ public class broker extends Thread {
 			String queryupdateordersummary1 = "update order_summary_paypal SET status_of_pay = 'Vendor Ack Pending', date_paid = '" + dateRxd + "', user_signature = '" + signature_user + "' where order_num = " + order_no; 
 			stmt.executeUpdate(queryupdateordersummary1);
 
-			int balanceAmountUser =0;
-			ResultSet rs1 = stmt.executeQuery("select * from user_details_paypal where user_name = '" + user +"'");
-			if(rs1.next()){
-				balanceAmountUser = Integer.parseInt(rs1.getString("user_credit_available"));
-			}
-			if(balanceAmountUser < amount ){
-				System.out.println("Insufficient balance");
-			} else {
+
 				String queryupdateuserdetails1 = "update user_details_paypal SET user_credit_available = user_credit_available - " + amount + " where user_name = '" + user + "'";
 				stmt.executeUpdate(queryupdateuserdetails1);
 
 				String queryupdateuserdetails2 = "update user_details_paypal SET user_credit_available = user_credit_available + " + amount + " where user_name = '" + eComName + "'";
 				stmt.executeUpdate(queryupdateuserdetails2);
-			}
 
 			send_msg(ecomSock,crypt.encrypt(sb,ivKey,order_no+info2ecom+"Paid $"+amt));
 			String msg5 = crypt.decrypt(sb, ivKey, get_msg(ecomSock));
@@ -163,9 +172,10 @@ public class broker extends Thread {
 			}
 			String queryupdateordersummary2 = "update order_summary_paypal SET status_of_pay = 'Paid', date_paid = '" + dateRxd + "', vendor_signature_ack = '" + ecomsignature + "' where order_num = " + order_no; 
 			stmt.executeUpdate(queryupdateordersummary2);
-
+			return 1;
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			e.printStackTrace();
+			return 0;
 		}
 	}
 
@@ -194,8 +204,9 @@ public class broker extends Thread {
 				System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
 				getSessKeyClientEcomm(server,client);
 				e2eSecureCommn(server,client);
-				processPayment(server,client);
-				passMsg(client,server);
+				if(processPayment(server,client)!=0) {
+					passMsg(client,server);
+				}
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");

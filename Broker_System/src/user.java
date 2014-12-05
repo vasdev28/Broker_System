@@ -8,14 +8,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
 import java.io.*;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-
-
-
-
 import org.apache.commons.codec.binary.Base64;
 
 public class user {
@@ -23,7 +18,7 @@ public class user {
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
 	private static String sa =null, sc=null;
-	private static String download_path = "C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\tmp2.txt";
+	private static String download_path = "D:\\tmp2.txt";
 
 	private static String get_msg(Socket insock) {
 		try {
@@ -89,8 +84,12 @@ public class user {
 		}
 	}
 
-	private static void payBill(Socket client) {
+	private static int payBill(Socket client) {
 		String msg2 = crypt.decrypt(sa, ivKey, get_msg(client));
+		if(msg2.contains("Error")) {
+			System.out.println(msg2);
+			return 0;
+		}
 		int order_num = Integer.parseInt(msg2.substring(0,msg2.length()-24));
 		String msg2_sub = crypt.decrypt(sc,ivKey,msg2.substring(msg2.length()-24,msg2.length()));
 		String msg2_reg[] = msg2_sub.split(",Give .");
@@ -100,20 +99,17 @@ public class user {
 		String signature = crypt.RSASign(uname, order_num+",Give $"+bill_amt);
 		send_msg(client,crypt.encrypt(sa,ivKey,crypt.encrypt(sc,ivKey,bill_no)+",Give $"+bill_amt+","+signature));
 
-		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-		Connection conn;
 		try {
-			conn = dbconn.connectToDatabase();
-
+			DatabaseConnectivity dbconn = new DatabaseConnectivity();
+			Connection conn = dbconn.connectToDatabase();
 			Statement stmt = conn.createStatement();
-
 			String queryinsertuserpurchasehistory = "insert into purchase_history_user values (" + Integer.parseInt(bill_no)  + "," + order_num + ",'paypal','" + eComName + "')";
 			int checkifpurchasehistoryinserted = stmt.executeUpdate(queryinsertuserpurchasehistory);
-
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return 0;
 		} 
+		return 1;
 	}
 
 	private static void get_file(Socket outsock,String FilePath) {
@@ -147,9 +143,12 @@ public class user {
 				getSessKeyEcomm(client);
 				System.out.println("2.Ecom ="+sc);
 				getInventory(client);
-				payBill(client);
-				get_file(client,download_path);
-				System.out.println("File Received");
+				if(payBill(client)!=0) {
+					get_file(client,download_path);
+					System.out.println("File Received");
+				} else {
+					System.out.println("Error in payment. Process Aborted");
+				}
 				client.close();
 			} catch(IOException e1) {
 				System.out.println("Connection Timed out!!!");

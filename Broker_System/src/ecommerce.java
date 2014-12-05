@@ -22,7 +22,7 @@ public class ecommerce extends Thread {
 	private static String ivKey="0";
 	private static crypto crypt = new crypto();
 	private static String sb=null,sc=null,brokername = null,eComName;
-	private static String upload_file = "C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\tmp1.txt";
+	private static String upload_file = "D:\\tmp1.txt";
 
 	public ecommerce(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
@@ -111,29 +111,25 @@ public class ecommerce extends Thread {
 		return output_index;
 	}
 
-	private static void initiatePayment(Socket client,int itemNo) {
+	private static int initiatePayment(Socket client,int itemNo) {
 		DatabaseConnectivity dbconn = new DatabaseConnectivity();
 		try {
 		Connection conn = dbconn.connectToDatabase();
 		Statement stmt = conn.createStatement();
-		String numberItems =null;
+		int numberItems=0;
+		int itemPrice=65535;
 		ResultSet rs3 = stmt.executeQuery("select * from vendor_inventory_amazon where item_no = " + itemNo);
-		if(rs3.next())
-			numberItems = rs3.getString("number_items_avail");
-		if(numberItems.equals("0")){
-			System.out.println("The item you requested is out of Stock, Sorry for the inconveneince ");
-			System.out.println("Error processing payment. Item you requested is unavailable. Please try again");
-			//error message must be added
+		if(rs3.next()) {
+			numberItems = Integer.parseInt(rs3.getString("number_items_avail"));
+			itemPrice = Integer.parseInt(rs3.getString("item_price"));	
 		}
-		else{
-		String price;
-		int bill_no=1,numberOfItemsSold=1;
-
-			ResultSet rs = stmt.executeQuery("select * from vendor_inventory_amazon where item_no = " + itemNo);
-			if (rs.next()) {
-				price = rs.getString("item_price");
-			} else price = "65535";
-			rs = stmt.executeQuery("select max(bill_no)+1 as max from bill_details_amazon");
+		
+		if(numberItems==0) {
+			send_msg(client,crypt.encrypt(sb,ivKey,"Error: Items out-of-stock!!!"));
+			return 0;
+		} else {
+			int bill_no=1,numberOfItemsSold=1;
+			ResultSet rs = stmt.executeQuery("select max(bill_no)+1 as max from broker_transaction_amazon");
 			if (rs.next()) {
 				try {
 					bill_no = Integer.parseInt(rs.getString("max"));
@@ -141,17 +137,20 @@ public class ecommerce extends Thread {
 					bill_no = 1;
 				}
 			}
-			send_msg(client,crypt.encrypt(sb, ivKey,"Bill," + crypt.encrypt(sc,ivKey,bill_no+",Give $"+price)));
+			int amount = itemPrice * numberOfItemsSold;
+			send_msg(client,crypt.encrypt(sb, ivKey,"Bill," + crypt.encrypt(sc,ivKey,bill_no+",Give $"+itemPrice)+",$"+amount));
 
-			int amount = Integer.parseInt(price) * numberOfItemsSold;
 			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			Date date = new Date();
 			String dateRxd = dateFormat.format(date);
 			String queryInsertaftermsg1 = "insert into broker_transaction_amazon values(0," + bill_no + ",'" + brokername + "'," + amount + ",'" + dateRxd + "','ongoing','" + dateRxd + "')"; 
-			//System.out.println("Query after msg 1 = " + queryInsertaftermsg1);
 			stmt.executeUpdate(queryInsertaftermsg1);
 
 			String msg4 = crypt.decrypt(sb,ivKey,get_msg(client));
+			if (msg4.contains("Error")) {
+				System.out.println("Payment Aborted by user due to insufficient credits");
+				return 0;
+			}
 			String msg4_reg[] = msg4.split("Paid .");
 			String rxd_bill_no = crypt.decrypt(sc,ivKey,msg4_reg[0].substring(msg4_reg[0].length()-24,msg4_reg[0].length()));
 			String order_num = msg4_reg[0].substring(0,msg4_reg[0].length()-24);
@@ -168,9 +167,11 @@ public class ecommerce extends Thread {
 			
 			String queryupdateAmazonInventoryNumberItems = "update vendor_inventory_amazon SET number_items_avail = number_items_avail - " + numberOfItemsSold + " , number_sold = number_sold + " + numberOfItemsSold + " where item_no = " + itemNo;
 			stmt.executeUpdate(queryupdateAmazonInventoryNumberItems);
+			return 1;
 		}
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			e.printStackTrace();
+			return 0;
 		}
 	}
 
@@ -195,11 +196,14 @@ public class ecommerce extends Thread {
 				genSessKeyBroker(server);
 				getSessKeyUser(server);
 				System.out.println("Session Key for\n1.broker ="+sb+"\n2.User ="+sc);
-				int itemRequested = sendInventory(server,"C:\\Users\\AnukulKumar\\git\\Broker_System\\Broker_System\\input.txt");
+				int itemRequested = sendInventory(server,"D:\\input.txt");
 				System.out.println(itemRequested);
-				initiatePayment(server,itemRequested);
-				send_file(server,upload_file);
-				System.out.println("File transfer done");
+				if(initiatePayment(server,itemRequested)!=0) {
+					send_file(server,upload_file);
+					System.out.println("File transfer done");
+				} else {
+					System.out.println("Payment aborted");
+				}
 				server.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");
