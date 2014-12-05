@@ -105,13 +105,14 @@ public class user {
 			Statement stmt = conn.createStatement();
 			String queryinsertuserpurchasehistory = "insert into purchase_history_user values (" + Integer.parseInt(bill_no)  + "," + order_num + ",'paypal','" + eComName + "')";
 			int checkifpurchasehistoryinserted = stmt.executeUpdate(queryinsertuserpurchasehistory);
+			stmt.close();
 			conn.close();
+			return 1;
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e) {
 			e.printStackTrace();
 			return 0;
 		} 
-		
-		return 1;
+	
 	}
 
 	private static void get_file(Socket outsock,String FilePath) {
@@ -151,8 +152,10 @@ public class user {
 				} else {
 					System.out.println("Error in payment. Process Aborted");
 				}
-				client.close();
+				rs.close();
+				stmt.close();
 				conn.close();
+				client.close();
 			} catch(IOException e1) {
 				System.out.println("Connection Timed out!!!");
 				e1.printStackTrace();

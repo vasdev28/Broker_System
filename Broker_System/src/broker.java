@@ -64,6 +64,8 @@ public class broker extends Thread {
 		} else{
 			System.out.println("\n Could not find user sec key \n");
 		}
+		rs.close();
+		stmt.close();
 		conn.close();
 	}
 
@@ -113,6 +115,7 @@ public class broker extends Thread {
 					order_no = 1;
 				}
 			}
+			rs.close();
 			String msg1 = crypt.decrypt(sb, ivKey, get_msg(ecomSock));
 			if(msg1.contains("Error")) {
 				
@@ -135,6 +138,7 @@ public class broker extends Thread {
 					return 0;
 				}
 			}
+			rs1.close();
 			String msg2_sub = msg1.substring(5,29);
 			send_msg(userSock,crypt.encrypt(sa, ivKey, order_no+msg2_sub));
 			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -177,6 +181,7 @@ public class broker extends Thread {
 			}
 			String queryupdateordersummary2 = "update order_summary_paypal SET status_of_pay = 'Paid', date_paid = '" + dateRxd + "', vendor_signature_ack = '" + ecomsignature + "' where order_num = " + order_no; 
 			stmt.executeUpdate(queryupdateordersummary2);
+			stmt.close();
 			conn.close();
 			return 1;
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
@@ -208,6 +213,7 @@ public class broker extends Thread {
 				} else {
 					System.out.println("\n The broker secret key was not found \n");
 				}
+				rs.close();
 				System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
 				getSessKeyClientEcomm(server,client);
 				e2eSecureCommn(server,client);
@@ -215,6 +221,7 @@ public class broker extends Thread {
 					passMsg(client,server);
 				}
 				server.close();
+				stmt.close();
 				conn.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");

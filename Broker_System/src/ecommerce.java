@@ -69,6 +69,8 @@ public class ecommerce extends Thread {
 			System.out.println("\n Could not find user sec key \n");
 		}
 		brokername = brokerName;
+		rs.close();
+		stmt.close();
 		conn.close();
 	}
 
@@ -123,9 +125,10 @@ public class ecommerce extends Thread {
 			numberItems = Integer.parseInt(rs3.getString("number_items_avail"));
 			itemPrice = Integer.parseInt(rs3.getString("item_price"));	
 		}
-		
+		rs3.close();
 		if(numberItems==0) {
 			send_msg(client,crypt.encrypt(sb,ivKey,"Error: Items out-of-stock!!!"));
+			stmt.close();
 			conn.close();
 			return 0;
 		} else {
@@ -138,6 +141,7 @@ public class ecommerce extends Thread {
 					bill_no = 1;
 				}
 			}
+			rs.close();
 			int amount = itemPrice * numberOfItemsSold;
 			send_msg(client,crypt.encrypt(sb, ivKey,"Bill," + crypt.encrypt(sc,ivKey,bill_no+",Give $"+itemPrice)+",$"+amount));
 
@@ -150,6 +154,7 @@ public class ecommerce extends Thread {
 			String msg4 = crypt.decrypt(sb,ivKey,get_msg(client));
 			if (msg4.contains("Error")) {
 				System.out.println("Payment Aborted by user due to insufficient credits");
+				stmt.close();
 				conn.close();
 				return 0;
 			}
@@ -169,6 +174,7 @@ public class ecommerce extends Thread {
 			
 			String queryupdateAmazonInventoryNumberItems = "update vendor_inventory_amazon SET number_items_avail = number_items_avail - " + numberOfItemsSold + " , number_sold = number_sold + " + numberOfItemsSold + " where item_no = " + itemNo;
 			stmt.executeUpdate(queryupdateAmazonInventoryNumberItems);
+			stmt.close();
 			conn.close();
 			return 1;
 		}
