@@ -1,7 +1,7 @@
 Testing all in 1 machine
 --------------------------
 java user alice localhost 1067 amazon
-java broker 1067 localhost 1068
+java broker 1067
 java ecommerce amazon 1068
 
 Testing each in a different machine
@@ -9,7 +9,7 @@ Alice : IP1
 Broker: IP2 Port2
 Amazon  :  IP3 Port3
 java user alice ip2 port2 amazon
-java broker port2 ip3 port3
+java broker port2
 java ecommerce amazon port3
 
 Sample netmachine configs
@@ -17,5 +17,5 @@ Alice: net01
 Broker: net02 1067
 Amazon: net03 1068
 java user alice net02.utdallas.edu 1067 amazon
-java broker 1067 net03.utdallas.edu 1068
+java broker 1067
 java ecommerce amazon 1068
