@@ -79,7 +79,7 @@ public class ecommerce extends Thread {
 
 	private static void getSessKeyUser(Socket client) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
 		String msg1 = crypt.decrypt(sb, ivKey, get_msg(client));
-		sc = crypt.RSADecrypt("amazon", msg1);
+		sc = crypt.RSADecrypt(eComName, msg1);
 		send_msg(client, crypt.encrypt(sb, ivKey, crypt.encrypt(sc, ivKey, "got it "+brokername.toLowerCase())));
 	}
 

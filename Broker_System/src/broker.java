@@ -13,7 +13,7 @@ public class broker extends Thread {
 	private static String ivKey="0";
 	private static String ecom_ip;
 	private static int ecom_port;
-	private static String eComName;
+	private static String eComName=null;
 	private static crypto crypt = new crypto();
 	private static String sa=null,sb=null;
 	private static String user=null;
@@ -190,6 +190,29 @@ public class broker extends Thread {
 			return 0;
 		}
 	}
+	
+	private static int getEcomDetails() {
+		try {
+			DatabaseConnectivity dbconn = new DatabaseConnectivity();
+			Connection conn = dbconn.connectToDatabase("broker");
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("select * from user_details_paypal where user_name = '"+ eComName+"';");
+			if(rs.next()) {
+				ecom_ip = rs.getString("hostname");
+				ecom_port = Integer.parseInt(rs.getString("port"));
+				rs.close();
+				stmt.close();
+				conn.close();
+				return 1;
+			}
+			rs.close();
+			stmt.close();
+			conn.close();
+		} catch (Exception e) {
+			System.out.println("Error when getting ip/port of ecomm...");
+		}
+		return 0;
+	}
 
 	private static void passMsg(Socket from_skt,Socket to_skt) {
 		send_msg(to_skt,get_msg(from_skt));
@@ -198,31 +221,31 @@ public class broker extends Thread {
 	public void run() {
 		while(true) {
 			try {
-				DatabaseConnectivity dbconn = new DatabaseConnectivity();
-				Connection conn = dbconn.connectToDatabase("broker");
-				Statement stmt = conn.createStatement();
-
 				Socket server = serverSocket.accept();
-				Socket client = new Socket(ecom_ip, ecom_port);
 				genSessKeyUser(server);
-
-				ResultSet rs = stmt.executeQuery("select * from user_details_paypal where user_name = '"+ eComName+"';");
-				if(rs.next()){
-					String secKey = rs.getString("user_secret_key");
-					getSessKeyEcom(client,secKey);
-				} else {
-					System.out.println("\n The broker secret key was not found \n");
+				if(getEcomDetails()!=0) {
+					Socket client = new Socket(ecom_ip, ecom_port);
+					DatabaseConnectivity dbconn = new DatabaseConnectivity();
+					Connection conn = dbconn.connectToDatabase("broker");
+					Statement stmt = conn.createStatement();
+					ResultSet rs = stmt.executeQuery("select * from user_details_paypal where user_name = '"+ eComName+"';");
+					if(rs.next()){
+						String secKey = rs.getString("user_secret_key");
+						getSessKeyEcom(client,secKey);
+					} else {
+						System.out.println("\n The broker secret key was not found \n");
+					}
+					rs.close();
+					stmt.close();
+					conn.close();
+					System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
+					getSessKeyClientEcomm(server,client);
+					e2eSecureCommn(server,client);
+					if(processPayment(server,client)!=0) {
+						passMsg(client,server);
+					}
+					server.close();
 				}
-				rs.close();
-				System.out.println("Session Key for\n1.User = "+sa+"\n2.Ecom = "+sb);
-				getSessKeyClientEcomm(server,client);
-				e2eSecureCommn(server,client);
-				if(processPayment(server,client)!=0) {
-					passMsg(client,server);
-				}
-				server.close();
-				stmt.close();
-				conn.close();
 			} catch(SocketTimeoutException s) {
 				System.out.println("Socket timed out!");
 				break;
@@ -237,8 +260,8 @@ public class broker extends Thread {
 
 	public static void main(String [] args) {
 		int broker_port = Integer.parseInt(args[0]);
-		ecom_ip = args[1];
-		ecom_port = Integer.parseInt(args[2]);
+//		ecom_ip = args[1];
+//		ecom_port = Integer.parseInt(args[2]);
 		try {
 			Thread t = new broker(broker_port);
 			t.start();
