@@ -5,14 +5,21 @@ java broker 1067
 java ecommerce amazon 1068
 
 Testing each in a different machine
+------------------------------------
 Alice : IP1
+Bob : IP1
+Trudy : IP1
 Broker: IP2 Port2
 Amazon  :  IP3 Port3
+Ebay: IP3 Port4
+
 java user alice ip2 port2 amazon
 java broker port2
 java ecommerce amazon port3
+java ecommerce ebay port4
 
-Sample netmachine configs
+Sample net machine configs
+---------------------------
 Alice: net01
 Broker: net02 1067
 Amazon: net03 1068

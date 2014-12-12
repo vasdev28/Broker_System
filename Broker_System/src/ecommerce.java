@@ -25,7 +25,7 @@ public class ecommerce extends Thread {
 
 	public ecommerce(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
-		serverSocket.setSoTimeout(10000);
+		serverSocket.setSoTimeout(60000);
 	}
 
 	private static String get_msg(Socket insock) {
@@ -224,6 +224,7 @@ public class ecommerce extends Thread {
 					| InvalidKeySpecException | NoSuchPaddingException
 					| IllegalBlockSizeException | BadPaddingException|IOException e) {
 				System.out.println("Unexpected errror");
+				e.printStackTrace();
 				break;
 			} catch (InstantiationException|IllegalAccessException|ClassNotFoundException|SQLException e) {
 				e.printStackTrace();

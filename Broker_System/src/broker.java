@@ -20,7 +20,7 @@ public class broker extends Thread {
 
 	public broker(int port) throws IOException {
 		serverSocket = new ServerSocket(port);
-		serverSocket.setSoTimeout(10000);
+		serverSocket.setSoTimeout(60000);
 	}
 
 	private static String get_msg(Socket insock) {
@@ -251,6 +251,7 @@ public class broker extends Thread {
 				break;
 			} catch(IOException e) {
 				System.out.println("Unexpected errror");
+				e.printStackTrace();
 				break;
 			} catch (InstantiationException|IllegalAccessException|ClassNotFoundException|SQLException e) {
 				e.printStackTrace();
@@ -260,8 +261,6 @@ public class broker extends Thread {
 
 	public static void main(String [] args) {
 		int broker_port = Integer.parseInt(args[0]);
-//		ecom_ip = args[1];
-//		ecom_port = Integer.parseInt(args[2]);
 		try {
 			Thread t = new broker(broker_port);
 			t.start();

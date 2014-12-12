@@ -92,13 +92,13 @@ public class crypto {
 		BigInteger publicModulus = publ.getModulus();
 		
 		System.out.println("priEx= " + privateExponent + "\npriMod = " + privateModulus + "\npubExp = " + publicExponent + "\npubMod = " + publicModulus );
-//		DatabaseConnectivity dbconn = new DatabaseConnectivity();
-//		Connection conn = dbconn.connectToDatabase("ecom");
-//		Statement stmt = conn.createStatement();
-//		stmt.executeUpdate("insert into public_key values ('" + user + "','" + publicExponent.toString() + "','" + publicModulus.toString() + "')");
-//		stmt.executeUpdate("insert into private_key values ('" + user + "','" + privateExponent.toString() + "','" + privateModulus.toString() + "')");
-//		stmt.close();
-//		conn.close();
+		DatabaseConnectivity dbconn = new DatabaseConnectivity();
+		Connection conn = dbconn.connectToDatabase("ecom");
+		Statement stmt = conn.createStatement();
+		stmt.executeUpdate("insert into public_key values ('" + user + "','" + publicExponent.toString() + "','" + publicModulus.toString() + "')");
+		stmt.executeUpdate("insert into private_key values ('" + user + "','" + privateExponent.toString() + "','" + privateModulus.toString() + "')");
+		stmt.close();
+		conn.close();
 	}
 
 	public String RSAEncrypt(String user, String msg) throws NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidKeyException, UnsupportedEncodingException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
